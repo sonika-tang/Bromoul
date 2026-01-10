@@ -1,0 +1,31 @@
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.label {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--color-text-main);
+}
+
+.input {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--color-gray-200);
+    font-size: 16px;
+    font-family: var(--font-english);
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.input::placeholder {
+    color: var(--color-text-light);
+}

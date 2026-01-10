@@ -1,0 +1,217 @@
+.messaging {
+    padding-top: 40px;
+    padding-bottom: 80px;
+    height: calc(100vh - 70px);
+    /* Fill remaining height */
+}
+
+.layout {
+    display: flex;
+    height: 600px;
+    gap: 24px;
+}
+
+.sidebar {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.sidebarTitle {
+    padding: 16px;
+    margin: 0;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.chatList {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.chatItem {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.chatItem:hover {
+    background-color: var(--color-gray-100);
+}
+
+.active {
+    background-color: #e8f5e9;
+    /* Light green */
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--color-gray-200);
+}
+
+.chatInfo {
+    flex: 1;
+}
+
+.chatHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.time {
+    font-size: 12px;
+    color: var(--color-text-light);
+}
+
+.lastMsg {
+    font-size: 13px;
+    color: var(--color-text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.chatWindow {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.chatTop {
+    padding: 16px;
+    border-bottom: 1px solid var(--color-gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chatHeaderInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chatHeaderInfo h3 {
+    font-size: 16px;
+    margin: 0;
+}
+
+.smBtn {
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+.messagesList {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: #fafafa;
+}
+
+.messageRow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 70%;
+}
+
+.myMsgRow {
+    align-items: flex-end;
+    align-self: flex-end;
+}
+
+.bubble {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    position: relative;
+}
+
+.theirBubble {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-bottom-left-radius: 2px;
+}
+
+.myBubble {
+    background-color: var(--color-primary);
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.msgTime {
+    font-size: 11px;
+    color: var(--color-text-light);
+    margin-top: 4px;
+}
+
+.fileAttachment {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    display: block;
+}
+
+.theirBubble .fileAttachment {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.inputArea {
+    padding: 16px;
+    border-top: 1px solid var(--color-gray-200);
+    display: flex;
+    gap: 12px;
+    background-color: var(--color-white);
+}
+
+.msgInput {
+    flex: 1;
+    border: 1px solid var(--color-gray-200);
+    padding: 10px 16px;
+    border-radius: 24px;
+    outline: none;
+    font-family: var(--font-english);
+}
+
+.msgInput:focus {
+    border-color: var(--color-primary);
+}
+
+.attachBtn {
+    padding: 0 12px;
+    font-size: 20px;
+}
+
+@media (max-width: 768px) {
+    .layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 200px;
+    }
+
+    .chatWindow {
+        height: 500px;
+    }
+}

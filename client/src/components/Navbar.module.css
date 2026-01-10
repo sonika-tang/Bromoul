@@ -1,0 +1,120 @@
+.navbar {
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 70px;
+    display: flex;
+    align-items: center;
+}
+
+.navContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.logo {
+    font-family: var(--font-english);
+    font-weight: 700;
+    font-size: 24px;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+}
+
+.logoBrom {
+    color: var(--color-primary);
+}
+
+.logoOul {
+    color: var(--color-secondary);
+}
+
+.desktopMenu {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.navLink {
+    color: var(--color-text-main);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 16px;
+    transition: color 0.2s;
+}
+
+.navLink:hover {
+    color: var(--color-primary);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.langToggle {
+    background: none;
+    border: 1px solid var(--color-gray-200);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-text-main);
+    transition: all 0.2s;
+}
+
+.langToggle:hover {
+    background-color: var(--color-gray-100);
+}
+
+.mobileToggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .desktopMenu {
+        display: none;
+    }
+
+    .mobileToggle {
+        display: block;
+    }
+
+    .mobileMenu {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: var(--color-white);
+        box-shadow: var(--shadow-md);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .mobileLink {
+        text-decoration: none;
+        color: var(--color-text-main);
+        font-weight: 500;
+        font-size: 16px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .mobileActions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+    }
+}

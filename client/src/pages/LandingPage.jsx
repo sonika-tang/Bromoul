@@ -35,28 +35,28 @@ const LandingPage = () => {
                     <div className={styles.featureGrid}>
                         <Card className={styles.featureCard}>
                             <div className={styles.iconWrapper} style={{ backgroundColor: '#e8f5e9', color: '#4CAF50' }}>
-                                🛒
+                                
                             </div>
                             <h3 className={styles.featureTitle}>ផ្សារ (Psar)</h3>
                             <p className={styles.featureText}>ទទួលបានកសិផលស្រស់ៗដោយផ្ទាល់ ជាមួយតម្លៃច្បាស់លាស់ និងគុណភាពដែលបានបញ្ជាក់។</p>
                         </Card>
                         <Card className={styles.featureCard}>
                             <div className={styles.iconWrapper} style={{ backgroundColor: '#fff3e0', color: '#FF9800' }}>
-                                📝
+                                
                             </div>
-                            <h3 className={styles.featureTitle}>សំណើស្វែងរក (RFS)</h3>
-                            <p className={styles.featureText}>អ្នកទិញអាចប្រកាសពីតម្រូវការ (RFS) ហើយកសិករយើងអាចដេញថ្លៃដើម្បីផ្គត់ផ្គង់។</p>
+                            <h3 className={styles.featureTitle}>សំណើស្វែងរក</h3>
+                            <p className={styles.featureText}>អ្នកទិញអាចប្រកាសពីតម្រូវការ ហើយកសិករយើងអាចដេញថ្លៃដើម្បីផ្គត់ផ្គង់។</p>
                         </Card>
                         <Card className={styles.featureCard}>
                             <div className={styles.iconWrapper} style={{ backgroundColor: '#e3f2fd', color: '#2196F3' }}>
-                                🚚
+                                
                             </div>
                             <h3 className={styles.featureTitle}>ឆ្លង (Chhlon)</h3>
                             <p className={styles.featureText}>ប្រព័ន្ធតាមដានការដឹកជញ្ជូន និងគណនាតម្លៃដឹក ទាំងការដឹកធម្មតា និងដឹកត្រជាក់។</p>
                         </Card>
                         <Card className={styles.featureCard}>
                             <div className={styles.iconWrapper} style={{ backgroundColor: '#f3e5f5', color: '#9C27B0' }}>
-                                🛡️
+                                
                             </div>
                             <h3 className={styles.featureTitle}>ទំនុកចិត្ត</h3>
                             <p className={styles.featureText}>ប្រព័ន្ធសម្គាល់កសិករដែលមានការបញ្ជាក់ និងអាចតាមដានប្រភពកសិផលតាម QR។</p>

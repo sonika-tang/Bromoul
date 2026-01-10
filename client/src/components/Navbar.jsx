@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from './Button';
 import styles from './Navbar.module.css';
+import Logo from '../assets/Bromoul-logo.png';
 
 const Navbar = () => {
     const [lang, setLang] = useState('en'); // 'en' or 'km'
@@ -15,8 +16,7 @@ const Navbar = () => {
         <nav className={styles.navbar}>
             <div className={`container ${styles.navContainer}`}>
                 <Link to="/" className={styles.logo}>
-                    <span className={styles.logoBrom}>BROM</span>
-                    <span className={styles.logoOul}>OUL</span>
+                    <img src={Logo} alt="Bromoul Logo" style={{ height: '40px' }} />
                 </Link>
 
                 {/* Desktop Menu */}

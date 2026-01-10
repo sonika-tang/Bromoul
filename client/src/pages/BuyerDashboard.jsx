@@ -29,19 +29,34 @@ const BuyerDashboard = () => {
         setRfsList(rfsList.filter(r => r.id !== id));
     };
 
+    const notifyTelegram = async (msg) => {
+        try {
+            await fetch('/api/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            });
+        } catch (e) {
+            console.error('Notify Failed', e);
+        }
+    };
+
     // Simulation of Delivery Flow trigger
     const handleTestPurchase = () => {
         alert('ការបញ្ជាទិញបានសម្រេច! ចូលទៅកាន់ "ការបញ្ជាទិញរបស់ខ្ញុំ" ដើម្បីតាមដាន។');
         setActiveTab('orders');
         setDeliveryStep(1); // Step 1: Agreed to buy
+        notifyTelegram('💰 New Order! Buyer purchased Jasmine Rice (500kg).');
     };
 
     const handleSendDelivery = () => {
         setDeliveryStep(4); // Buyer sends delivery
+        notifyTelegram('🚚 Logistics Dispatched for Order #ORD-NEW.');
     };
 
     const handleConfirmCompletion = () => {
         setDeliveryStep(6); // Process Complete
+        notifyTelegram('🎉 Order #ORD-NEW Completed! Buyer confirmed receipt.');
     };
 
     return (

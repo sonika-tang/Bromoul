@@ -28,16 +28,31 @@ const FarmerDashboard = () => {
         setEditingId(null);
     };
 
+    const notifyTelegram = async (msg) => {
+        try {
+            await fetch('/api/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            });
+        } catch (e) {
+            console.error('Notify Failed', e);
+        }
+    };
+
     const handleStartDelivery = () => {
         setDeliveryStep(2); // Move to Step 2: Farmer prepares
+        notifyTelegram('🚜 Farmer (Sophea) started preparing Order #ORD-001');
         setTimeout(() => {
             alert('បញ្ជាក់ការរៀបចំរួចរាល់!');
             setDeliveryStep(3); // Auto move to Step 3: Ready
+            notifyTelegram('✅ Order #ORD-001 is READY for pickup.');
         }, 1000);
     };
 
     const handleHandover = () => {
         setDeliveryStep(5); // Farmer confirms handover
+        notifyTelegram('📦 Order #ORD-001 has been HANDED OVER to logistics.');
     };
 
     return (

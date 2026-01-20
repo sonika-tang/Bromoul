@@ -1,0 +1,63 @@
+/* Updating Pie Chart to work with light theme (remove dark container bg) */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 0;
+    /* Remove padding */
+    background: transparent;
+    /* Transparent bg */
+    border-radius: 0;
+    box-shadow: none;
+    /* No shadow on component itself */
+    width: 100%;
+}
+
+.chartWrapper {
+    position: relative;
+    width: 200px;
+    /* Slightly smaller */
+    height: 200px;
+}
+
+.chart {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.centerHole {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    background: white;
+    /* Match card bg */
+    border-radius: 50%;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    /* Text color update */
+    font-size: 0.9rem;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}

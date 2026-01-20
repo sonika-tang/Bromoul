@@ -1,39 +1,61 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import UserSwitcher from './components/UserSwitcher';
+
+// Pages
 import LandingPage from './pages/LandingPage';
 import FarmerDashboard from './pages/FarmerDashboard';
 import BuyerDashboard from './pages/BuyerDashboard';
 import Marketplace from './pages/Marketplace';
-import Logistics from './pages/Logistics';
+import CartPage from './pages/CartPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import ProfilePage from './pages/ProfilePage';
 import Messaging from './pages/Messaging';
-import styles from './styles/App.module.css';
+
+// Scroll to top on route change
+const ScrollToTop = () => {
+    const { pathname } = useLocation();
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
+    return null;
+};
 
 function App() {
-  return (
-    <Router>
-      <div className={styles.app}>
-        <Navbar />
-        <main className={styles.main}>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            {/* Placeholders for other routes */}
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/logistics" element={<Logistics />} />
-            {/* Meatika removed */}
-            <Route path="/messages" element={<Messaging />} />
-            <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
-            <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
-          </Routes>
-        </main>
-        <footer className={styles.footer}>
-          <div className="container text-center">
-            <p>&copy; 2024 Bromoul. Connecting Farmers and Buyers.</p>
-          </div>
-        </footer>
-      </div>
-    </Router>
-  );
+    return (
+        <Router>
+            <ScrollToTop />
+            <div className="app-layout">
+                <Navbar />
+                <UserSwitcher />
+                <main className="main-content" style={{ minHeight: '80vh', paddingBottom: '2rem' }}>
+                    <Routes>
+                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
+                        <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
+                        <Route path="/psar" element={<Marketplace />} />
+                        <Route path="/vipheak" element={<AnalyticsPage />} />
+                        <Route path="/cart" element={<CartPage />} />
+                        <Route path="/chat" element={<Messaging />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                    </Routes>
+                </main>
+
+                {/* Footer Placeholder - Can be added later */}
+                <footer style={{
+                    textAlign: 'center',
+                    padding: '2rem',
+                    backgroundColor: '#f9f9f9',
+                    color: '#666',
+                    borderTop: '1px solid #eee'
+                }}>
+                    <p>© 2024 Bromoul. កសិកម្មដើម្បីទាំងអស់គ្នា។</p>
+                </footer>
+            </div>
+        </Router>
+    );
 }
 
 export default App;

@@ -1,0 +1,181 @@
+/* Update tracking functionality */
+.trackingList {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.trackingItem {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+}
+
+.trackingHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #f5f5f5;
+    padding-bottom: 1rem;
+}
+
+.partyName {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+.statusBadge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: #f0f0f0;
+    color: #555;
+}
+
+/* Status Colors */
+.agreed {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.preparing {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.ready {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.requested {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.out_for_delivery {
+    background: #e0f7fa;
+    color: #006064;
+}
+
+.completed {
+    background: #4CAF50;
+    color: white;
+}
+
+.trackingBody {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.trackingInfo p {
+    margin: 4px 0;
+    font-size: 0.95rem;
+}
+
+.actions button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.actions button:hover {
+    background: #43a047;
+}
+
+/* Existing styles... */
+.container {
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.title {
+    margin-bottom: 1.5rem;
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #eee;
+}
+
+.tab {
+    padding: 1rem 2rem;
+    background: none;
+    font-size: 1.1rem;
+    color: #888;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tab.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    margin-bottom: -2px;
+}
+
+.empty {
+    text-align: center;
+    color: #999;
+    padding: 3rem;
+}
+
+.checkoutSection {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.cartItemSimple {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.options {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.radioLabel {
+    display: block;
+    margin: 0.8rem 0;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.radioLabel input {
+    margin-right: 10px;
+}
+
+.summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.checkoutBtn {
+    background: var(--warning);
+    color: white;
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    border-radius: 8px;
+}

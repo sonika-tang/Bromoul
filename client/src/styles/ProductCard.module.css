@@ -1,0 +1,127 @@
+.card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* Softer shadow for white theme */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s;
+    border: 1px solid var(--border-color);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.imageContainer {
+    height: 160px;
+    background: #f0f0f0;
+    position: relative;
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.badgeOffer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--primary);
+    /* Green */
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badgeRequest {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--warning);
+    /* Orange */
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.content {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.price {
+    color: var(--warning);
+    /* Orange for money */
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.certBadge {
+    background: #E8F5E9;
+    /* Light Green */
+    color: #2E7D32;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
+.actionBtn {
+    width: 100%;
+    padding: 0.75rem;
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.actionBtn:hover {
+    background: var(--primary);
+    color: white;
+}

@@ -1,0 +1,99 @@
+
+.container {
+  background: #1e1e1e;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  margin-bottom: 2rem;
+}
+
+.graphArea {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 250px;
+  padding-top: 2rem;
+  border-bottom: 1px solid #444;
+  gap: 1rem;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  width: 100%;
+}
+
+.bar {
+  width: 24px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  transition: height 0.3s ease;
+  min-height: 4px;
+}
+
+.demand {
+  background-color: #ff6b6b; /* Reddish for Need/Demand */
+}
+
+.supply {
+  background-color: #4ecdc4; /* Teal for Supply */
+}
+
+.value {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: #ccc;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.bar:hover .value {
+  opacity: 1;
+}
+
+.label {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #aaa;
+  text-align: center;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}

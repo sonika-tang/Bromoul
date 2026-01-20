@@ -1,0 +1,167 @@
+.container {
+    padding: 2rem;
+    max-width: 600px;
+    /* Slimmer profile view */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.profileHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.avatarWrapper {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #646cff;
+    /* Theme color ring */
+    overflow: hidden;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.name {
+    margin: 0;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.roleBadge {
+    background: #333;
+    color: #aaa;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+}
+
+.debugControls {
+    margin-top: 0.5rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.debugControls:hover {
+    opacity: 1;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.primaryBtn,
+.secondaryBtn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.primaryBtn {
+    background: #646cff;
+    color: white;
+}
+
+.primaryBtn:hover {
+    background: #535bf2;
+}
+
+.secondaryBtn {
+    background: #333;
+    color: #fff;
+}
+
+.secondaryBtn:hover {
+    background: #444;
+}
+
+.formSection {
+    width: 100%;
+    background: #1e1e1e;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease-out;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-top: 1rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+}
+
+.formGroup label {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.formGroup input,
+.formGroup select {
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: white;
+    font-family: inherit;
+}
+
+.row {
+    display: flex;
+    gap: 1rem;
+}
+
+.halfInput {
+    flex: 1;
+}
+
+.submitBtn {
+    background: #4ecdc4;
+    /* Success/Action color */
+    color: #1a1a1a;
+    font-weight: bold;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.loading {
+    padding: 4rem;
+    text-align: center;
+    color: #666;
+}

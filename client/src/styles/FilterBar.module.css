@@ -1,0 +1,59 @@
+.container {
+    background: #2a2a2a;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.roleToggle {
+    display: flex;
+    background: #1a1a1a;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.roleBtn {
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.roleBtn.active {
+    background: #646cff;
+    color: white;
+}
+
+.roleBtn:hover:not(.active) {
+    background: #333;
+}
+
+.controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.select {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #444;
+    padding: 0.5rem;
+    border-radius: 4px;
+    min-width: 140px;
+    outline: none;
+}
+
+.select:focus {
+    border-color: #646cff;
+}

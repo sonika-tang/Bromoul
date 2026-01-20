@@ -1,43 +1,67 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import Button from './Button';
+
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import styles from './Navbar.module.css';
-import Logo from '../assets/Bromoul-logo.png';
+import { CartService } from '../services/cartService';
+
+// Text Logo Component
+const BromoulLogo = () => (
+    <div style={{ fontFamily: 'Noto Sans Khmer', fontWeight: 'bold', fontSize: '1.5rem', letterSpacing: '1px' }}>
+        <span style={{ color: '#4CAF50' }}>BROM</span>
+        <span style={{ color: '#FF9800' }}>OUL</span>
+    </div>
+);
 
 const Navbar = () => {
-    const [lang, setLang] = useState('en'); // 'en' or 'km'
     const [isOpen, setIsOpen] = useState(false);
+    const location = useLocation();
+    const [cartCount, setCartCount] = useState(0);
 
-    const toggleLang = () => {
-        setLang(prev => prev === 'en' ? 'km' : 'en');
-    };
+    const isActive = (path) => location.pathname === path;
+
+    // Khmer Navigation Items
+    const navItems = [
+        { label: 'ទំព័រដើម', path: '/' }, // Home
+        { label: 'ផ្សារ', path: '/psar' }, // Market
+        { label: 'វិភាគ', path: '/vipheak' }, // Analytic
+        { label: 'កន្ត្រក', path: '/cart', hasBadge: true }, // Cart
+        { label: 'សារ', path: '/chat' }, // Chat (New)
+        { label: 'ប្រវត្តិរូប', path: '/profile' }, // Profile
+    ];
+
+    // Simple cart count update effect
+    useEffect(() => {
+        const updateCount = async () => {
+            const items = await CartService.getCart();
+            setCartCount(items.length);
+        };
+        updateCount();
+
+        window.addEventListener('cartUpdated', updateCount);
+        return () => window.removeEventListener('cartUpdated', updateCount);
+    }, []);
 
     return (
         <nav className={styles.navbar}>
             <div className={`container ${styles.navContainer}`}>
-                <Link to="/" className={styles.logo}>
-                    <img src={Logo} alt="Bromoul Logo" style={{ height: '40px' }} />
+                <Link to="/" className={styles.logoLink}>
+                    <BromoulLogo />
                 </Link>
 
                 {/* Desktop Menu */}
                 <div className={styles.desktopMenu}>
-                    <Link to="/" className={styles.navLink}>ទំព័រដើម</Link>
-                    <Link to="/marketplace" className={styles.navLink}>ផ្សារ</Link>
-                    <Link to="/logistics" className={styles.navLink}>ដឹកជញ្ជូន</Link>
-                    {/* Meatika removed */}
-
-                    <div className={styles.actions}>
-                        {/* Lang toggle reserved if needed, hidden for now since default is Khmer */}
-                        {/* <button onClick={toggleLang} className={styles.langToggle}>
-                            {lang === 'en' ? 'KH' : 'EN'}
-                        </button> */}
-                        <Link to="/farmer-dashboard">
-                            <Button variant="outline" className={styles.navBtn}>កសិករ</Button>
+                    {navItems.map(item => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className={`${styles.navLink} ${isActive(item.path) ? styles.active : ''}`}
+                        >
+                            {item.label}
+                            {item.hasBadge && cartCount > 0 && (
+                                <span className={styles.badge}>{cartCount}</span>
+                            )}
                         </Link>
-                        <Link to="/buyer-dashboard">
-                            <Button variant="primary" className={styles.navBtn}>អ្នកទិញ</Button>
-                        </Link>
-                    </div>
+                    ))}
                 </div>
 
                 {/* Mobile Toggle */}
@@ -49,17 +73,19 @@ const Navbar = () => {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className={styles.mobileMenu}>
-                    <Link to="/" className={styles.mobileLink} onClick={() => setIsOpen(false)}>ទំព័រដើម</Link>
-                    <Link to="/marketplace" className={styles.mobileLink} onClick={() => setIsOpen(false)}>ផ្សារ</Link>
-                    <Link to="/logistics" className={styles.mobileLink} onClick={() => setIsOpen(false)}>ដឹកជញ្ជូន</Link>
-                    <div className={styles.mobileActions}>
-                        <Link to="/farmer-dashboard" onClick={() => setIsOpen(false)}>
-                            <Button variant="outline" fullWidth>ផ្ទាំងគ្រប់គ្រងកសិករ</Button>
+                    {navItems.map(item => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className={styles.mobileLink}
+                            onClick={() => setIsOpen(false)}
+                        >
+                            {item.label}
+                            {item.hasBadge && cartCount > 0 && (
+                                <span className={styles.mobileBadge}>({cartCount})</span>
+                            )}
                         </Link>
-                        <Link to="/buyer-dashboard" onClick={() => setIsOpen(false)}>
-                            <Button variant="primary" fullWidth>ផ្ទាំងគ្រប់គ្រងអ្នកទិញ</Button>
-                        </Link>
-                    </div>
+                    ))}
                 </div>
             )}
         </nav>

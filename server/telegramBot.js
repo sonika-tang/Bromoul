@@ -9,16 +9,15 @@ const token = process.env.TELEGRAM_BOT_TOKEN;
 
 let bot = null;
 if (token) {
-    bot = new TelegramBot(token, { polling: true });
-    // Handle /start command
+    // initialize bot in send‑only mode (no polling)
+    bot = new TelegramBot(token, { polling: false });
+
+    // if you want to handle /start locally, you can still attach handlers
     bot.onText(/\/start/, (msg) => {
         const chatId = msg.chat.id;
 
-        // Log Chat ID for developer
-        console.log('------------------------------------------------');
         console.log('✨ NEW USER STARTED BOT ✨');
         console.log(`Chat ID: ${chatId}`);
-        console.log('------------------------------------------------');
 
         const opts = {
             reply_markup: {
@@ -28,17 +27,16 @@ if (token) {
             }
         };
 
-        const message = `សូមស្វាគមន៍មកកាន់ ព្រមមូល (Bromoul)! 🌱\n\n` +
-            `ចុចប៊ូតុងខាងក្រោមដើម្បីចាប់ផ្តើមប្រើប្រាស់។`;
+        const message = `សូមស្វាគមន៍មកកាន់ ព្រមមូល (Bromoul)! 🌱\n\nចុចប៊ូតុងខាងក្រោមដើម្បីចាប់ផ្តើមប្រើប្រាស់។`;
 
         bot.sendMessage(chatId, message, opts);
     });
 
-    // Log for debugging
-    console.log('Telegram Bot is running...');
+    console.log('Telegram Bot initialized (send-only mode)…');
 } else {
     console.warn('TELEGRAM_BOT_TOKEN not found in .env. Notification will be mocked.');
 }
+
 
 const sendNotification = async (message) => {
     const chatId = process.env.TELEGRAM_CHAT_ID;

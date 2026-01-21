@@ -1,30 +1,52 @@
 import React from 'react';
-import styles from './Input.module.css';
 
 const Input = ({
-    label,
-    type = 'text',
-    placeholder,
-    value,
-    onChange,
-    name,
-    required = false,
-    className = ''
+  label,
+  type = 'text',
+  placeholder,
+  value,
+  onChange,
+  required = false,
+  error,
+  helperText,
+  className = '',
+  ...props
 }) => {
-    return (
-        <div className={`${styles.inputGroup} ${className}`}>
-            {label && <label className={styles.label}>{label} {required && '*'}</label>}
-            <input
-                className={styles.input}
-                type={type}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                name={name}
-                required={required}
-            />
-        </div>
-    );
+  return (
+    <div className={className}>
+      {label && (
+        <label style={{ 
+          display: 'block', 
+          marginBottom: '8px',
+          fontWeight: '500',
+          fontSize: '14px'
+        }}>
+          {label}
+          {required && <span style={{ color: '#d32f2f' }}>*</span>}
+        </label>
+      )}
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        required={required}
+        style={{
+          borderColor: error ? '#d32f2f' : undefined
+        }}
+        {...props}
+      />
+      {helperText && (
+        <small style={{ 
+          color: error ? '#d32f2f' : '#757575',
+          marginTop: '4px',
+          display: 'block'
+        }}>
+          {helperText}
+        </small>
+      )}
+    </div>
+  );
 };
 
 export default Input;

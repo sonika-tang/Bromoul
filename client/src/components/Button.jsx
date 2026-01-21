@@ -1,23 +1,32 @@
 import React from 'react';
-import styles from './Button.module.css';
 
 const Button = ({
-    children,
-    variant = 'primary',
-    onClick,
-    className = '',
-    type = 'button',
-    fullWidth = false
+  children,
+  variant = 'primary',
+  size = 'md',
+  fullWidth = false,
+  disabled = false,
+  onClick,
+  type = 'button',
+  className = '',
+  ...props
 }) => {
-    return (
-        <button
-            type={type}
-            className={`${styles.btn} ${styles[variant]} ${fullWidth ? styles.fullWidth : ''} ${className}`}
-            onClick={onClick}
-        >
-            {children}
-        </button>
-    );
+  const baseClass = 'button';
+  const variantClass = `btn-${variant}`;
+  const sizeClass = `btn-${size}`;
+  const fullWidthClass = fullWidth ? 'btn-full' : '';
+  
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClass} ${variantClass} ${sizeClass} ${fullWidthClass} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
 };
 
 export default Button;

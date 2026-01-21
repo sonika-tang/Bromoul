@@ -1,106 +1,336 @@
-
 import React, { useState, useEffect } from 'react';
-import ProductCard from '../components/ProductCard';
-import { ListingService, RefService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { db } from '../services/mockDB';
 import styles from '../styles/Marketplace.module.css';
 
-const Marketplace = () => {
-    const [activeTab, setActiveTab] = useState('products'); // 'products' | 'requests'
-    const [farmerProducts, setFarmerProducts] = useState([]);
-    const [buyerRequests, setBuyerRequests] = useState([]);
-    const [crops, setCrops] = useState([]);
-    const [loading, setLoading] = useState(true);
+const Marketplace = ({ userRole, user }) => {
+  const [activeTab, setActiveTab] = useState('products');
+  const [listings, setListings] = useState([]);
+  const [selectedCrop, setSelectedCrop] = useState('');
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-    // Filters
-    const [selectedCrop, setSelectedCrop] = useState('');
+  const crops = db._read('crops');
 
-    useEffect(() => {
-        const loadData = async () => {
-            setLoading(true);
-            try {
-                // Fetch Supply (products) and Demand (requests)
-                // Note: New API requires 'type' query param
-                const [fProducts, bRequests, allCrops] = await Promise.all([
-                    ListingService.getAll({ type: 'supply' }),
-                    ListingService.getAll({ type: 'demand' }),
-                    RefService.getCrops()
-                ]);
+  useEffect(() => {
+    loadListings();
+    const handleUpdate = () => loadListings();
+    window.addEventListener('listingsUpdated', handleUpdate);
+    window.addEventListener('db_update_listings', handleUpdate);
+    return () => {
+      window.removeEventListener('listingsUpdated', handleUpdate);
+      window.removeEventListener('db_update_listings', handleUpdate);
+    };
+  }, []);
 
-                // Map backend naming to frontend expectation if needed (e.g. crop_name vs cropName)
-                // Backend returns snake_case usually if raw pg, let's normalize
-                const normalize = (list) => list.map(i => ({
-                    ...i,
-                    name: i.crop_name, // Map crop_name to name for Card
-                    price: i.price_riel,
-                    budget: i.budget_riel
-                }));
+  const loadListings = async () => {
+    setLoading(true);
+    try {
+      const allListings = await db.get('listings');
+      setListings(allListings);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                setFarmerProducts(normalize(fProducts));
-                setBuyerRequests(normalize(bRequests));
-                setCrops(allCrops);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadData();
-    }, []);
+  const filteredListings = listings.filter(item => {
+    const typeMatch = item.type === (activeTab === 'products' ? 'supply' : 'demand');
+    const cropMatch = !selectedCrop || item.crop_id === selectedCrop;
+    return typeMatch && cropMatch;
+  });
 
-    const filteredItems = (activeTab === 'products' ? farmerProducts : buyerRequests).filter(item => {
-        if (selectedCrop && item.crop_id !== Number(selectedCrop)) return false;
-        return true;
+  const handleChat = (listing) => {
+    const otherUserId = listing.user_id;
+    
+    // Store the target user ID to open chat with
+    localStorage.setItem('bromoul:chatWithUserId', otherUserId);
+    
+    // Navigate to messages page
+    navigate('/chat');
+  };
+
+  const handleAddToCart = (listing) => {
+    const cart = JSON.parse(localStorage.getItem('bromoul:cart') || '[]');
+    cart.push({
+      ...listing,
+      cartId: Date.now().toString()
     });
+    localStorage.setItem('bromoul:cart', JSON.stringify(cart));
+    window.dispatchEvent(new Event('cartUpdated'));
+    alert('បានបន្ថែមទៅកន្ត្រក!');
+  };
 
-    return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>ផ្សារ <span className={styles.thin}>(Market)</span></h1>
+  const handleDeleteListing = async (listingId) => {
+    if (window.confirm('តើប្រាកដថាលុបចេញទេ?')) {
+      await db.delete('listings', listingId);
+      loadListings();
+    }
+  };
 
-            <div className={styles.controls}>
-                <div className={styles.tabs}>
-                    <button
-                        className={`${styles.tab} ${activeTab === 'products' ? styles.active : ''}`}
-                        onClick={() => setActiveTab('products')}
-                    >
-                        ផលិតផលកសិករ (Farmers)
-                    </button>
-                    <button
-                        className={`${styles.tab} ${activeTab === 'requests' ? styles.active : ''}`}
-                        onClick={() => setActiveTab('requests')}
-                    >
-                        តម្រូវការអ្នកទិញ (Buyers)
-                    </button>
-                </div>
+  return (
+    <div className={`container ${styles.container}`} style={{ paddingTop: '40px', paddingBottom: '80px' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '32px'
+      }}>
+        <h1 style={{ margin: 0, fontSize: '32px' }}>
+          ផ្សារ
+        </h1>
+      </div>
 
-                <select
-                    className={styles.filter}
-                    value={selectedCrop}
-                    onChange={(e) => setSelectedCrop(e.target.value)}
-                >
-                    <option value="">គ្រប់ដំណាំ</option>
-                    {crops.map(c => <option key={c.id} value={c.id}>{c.name_kh || c.name}</option>)}
-                </select>
-            </div>
-
-            {loading ? (
-                <div className={styles.loading}>កំពុងដំណើរការ...</div>
-            ) : (
-                <div className={styles.grid}>
-                    {filteredItems.length === 0 ? (
-                        <div className={styles.empty}>គ្មានទិន្នន័យ។</div>
-                    ) : (
-                        filteredItems.map(item => (
-                            <ProductCard
-                                key={item.id}
-                                product={item}
-                                isRequest={activeTab === 'requests'}
-                            />
-                        ))
-                    )}
-                </div>
-            )}
+      {/* Tabs and Filter */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #e0e0e0' }}>
+          <button
+            onClick={() => setActiveTab('products')}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '12px 16px',
+              fontSize: '16px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              borderBottom: activeTab === 'products' ? '2px solid #4CAF50' : 'none',
+              color: activeTab === 'products' ? '#4CAF50' : '#757575',
+              marginBottom: '-2px'
+            }}
+          >
+            ផលិតផលកសិករ
+          </button>
+          <button
+            onClick={() => setActiveTab('requests')}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '12px 16px',
+              fontSize: '16px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              borderBottom: activeTab === 'requests' ? '2px solid #FF9800' : 'none',
+              color: activeTab === 'requests' ? '#FF9800' : '#757575',
+              marginBottom: '-2px'
+            }}
+          >
+            សំណើអ្នកទិញ
+          </button>
         </div>
-    );
+
+        {/* Filter by Crop */}
+        <select
+          value={selectedCrop}
+          onChange={(e) => setSelectedCrop(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontFamily: 'Noto Sans Khmer'
+          }}
+        >
+          <option value="">គ្រប់ដំណាំ</option>
+          {crops.map(c => (
+            <option key={c.id} value={c.id}>
+              {c.icon} {c.name_kh}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Loading State */}
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+          កំពុងដំណើរការ...
+        </div>
+      )}
+
+      {/* Listings Grid */}
+      {!loading && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '24px'
+        }}>
+          {filteredListings.length === 0 ? (
+            <div style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: '40px',
+              color: '#999'
+            }}>
+              គ្មានលក់ដំណាំទេ
+            </div>
+          ) : (
+            filteredListings.map(listing => {
+              const crop = crops.find(c => c.id === listing.crop_id);
+              const isMyListing = user?.id === listing.user_id;
+
+              return (
+                <div
+                  key={listing.id}
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                    border: '1px solid #e0e0e0',
+                    transition: 'all 0.2s',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)'}
+                >
+                  {/* Image */}
+                  <div style={{
+                    height: '200px',
+                    background: '#f0f0f0',
+                    overflow: 'hidden'
+                  }}>
+                    <img
+                      src={listing.photo_url || 'https://via.placeholder.com/400x300'}
+                      alt={crop?.name_kh}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                      <h3 style={{ margin: '0', fontSize: '18px', fontWeight: '600' }}>
+                        {crop?.icon} {crop?.name_kh}
+                      </h3>
+                      <span style={{
+                        background: listing.type === 'supply' ? '#e8f5e9' : '#fff3e0',
+                        color: listing.type === 'supply' ? '#2e7d32' : '#f57c00',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}>
+                        {listing.type === 'supply' ? 'ផលិតផល' : 'សំណើ'}
+                      </span>
+                    </div>
+
+                    {/* Details */}
+                    <div style={{ marginBottom: '12px', fontSize: '14px', color: '#666' }}>
+                      <p style={{ margin: '4px 0' }}>
+                        បរិមាណ៖ {listing.quantity} {listing.unit}
+                      </p>
+                      <p style={{ margin: '4px 0' }}>
+                        📍 {listing.location}
+                      </p>
+                      {listing.type === 'supply' && (
+                        <p style={{ margin: '4px 0', fontWeight: '600', color: '#4CAF50' }}>
+                          {listing.price_riel?.toLocaleString()} ៛
+                        </p>
+                      )}
+                      {listing.type === 'demand' && (
+                        <p style={{ margin: '4px 0', fontWeight: '600', color: '#FF9800' }}>
+                          ថវិកា៖ {listing.budget_riel?.toLocaleString()} ៛
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleChat(listing)}
+                        style={{
+                          flex: 1,
+                          padding: '8px',
+                          border: '1px solid #e0e0e0',
+                          background: 'white',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          transition: 'all 0.2s',
+                          color: '#4CAF50'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#e8f5e9';
+                          e.currentTarget.style.borderColor = '#4CAF50';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'white';
+                          e.currentTarget.style.borderColor = '#e0e0e0';
+                        }}
+                      >
+                        ឆាត
+                      </button>
+
+                      {listing.type === 'supply' && !isMyListing && (
+                        <button
+                          onClick={() => handleAddToCart(listing)}
+                          style={{
+                            flex: 1,
+                            padding: '8px',
+                            border: 'none',
+                            background: '#4CAF50',
+                            color: 'white',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#43a047'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#4CAF50'}
+                        >
+                          + កន្ត្រក
+                        </button>
+                      )}
+
+                      {isMyListing && (
+                        <button
+                          onClick={() => handleDeleteListing(listing.id)}
+                          style={{
+                            flex: 1,
+                            padding: '8px',
+                            border: '1px solid #d32f2f',
+                            background: 'white',
+                            color: '#d32f2f',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#ffebee';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'white';
+                          }}
+                        >
+                          លុប
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Marketplace;

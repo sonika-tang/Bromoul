@@ -1,12 +1,11 @@
 import React from 'react';
-import styles from './Card.module.css';
 
-const Card = ({ children, className = '', padding = true }) => {
-    return (
-        <div className={`${styles.card} ${padding ? styles.padding : ''} ${className}`}>
-            {children}
-        </div>
-    );
+const Card = ({ children, className = '', elevation = 'md', ...props }) => {
+  return (
+    <div className={`card ${className}`} {...props}>
+      {children}
+    </div>
+  );
 };
 
 export default Card;

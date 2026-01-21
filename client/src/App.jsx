@@ -1,13 +1,10 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import UserSwitcher from './components/UserSwitcher';
+import { db } from './services/mockDB';
 
 // Pages
 import LandingPage from './pages/LandingPage';
-import FarmerDashboard from './pages/FarmerDashboard';
-import BuyerDashboard from './pages/BuyerDashboard';
 import Marketplace from './pages/Marketplace';
 import CartPage from './pages/CartPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -16,46 +13,57 @@ import Messaging from './pages/Messaging';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
-    const { pathname } = useLocation();
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, [pathname]);
-    return null;
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
 };
 
 function App() {
-    return (
-        <Router>
-            <ScrollToTop />
-            <div className="app-layout">
-                <Navbar />
-                <UserSwitcher />
-                <main className="main-content" style={{ minHeight: '80vh', paddingBottom: '2rem' }}>
-                    <Routes>
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
-                        <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
-                        <Route path="/psar" element={<Marketplace />} />
-                        <Route path="/vipheak" element={<AnalyticsPage />} />
-                        <Route path="/cart" element={<CartPage />} />
-                        <Route path="/chat" element={<Messaging />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                    </Routes>
-                </main>
+  const [currentRole, setCurrentRole] = useState(db.getCurrentRole());
+  const [currentUser, setCurrentUser] = useState(db.getCurrentUser());
 
-                {/* Footer Placeholder - Can be added later */}
-                <footer style={{
-                    textAlign: 'center',
-                    padding: '2rem',
-                    backgroundColor: '#f9f9f9',
-                    color: '#666',
-                    borderTop: '1px solid #eee'
-                }}>
-                    <p>© 2024 Bromoul. កសិកម្មដើម្បីទាំងអស់គ្នា។</p>
-                </footer>
-            </div>
-        </Router>
-    );
+  useEffect(() => {
+    // Listen for role changes
+    const handleRoleChange = () => {
+      setCurrentRole(db.getCurrentRole());
+      setCurrentUser(db.getCurrentUser());
+    };
+
+    window.addEventListener('roleChanged', handleRoleChange);
+    return () => window.removeEventListener('roleChanged', handleRoleChange);
+  }, []);
+
+  return (
+    <Router>
+      <ScrollToTop />
+      <div className="app-layout">
+        <Navbar userRole={currentRole} user={currentUser} />
+        <main className="main-content" style={{ minHeight: '80vh', paddingBottom: '2rem' }}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/psar" element={<Marketplace userRole={currentRole} user={currentUser} />} />
+            <Route path="/vipheak" element={<AnalyticsPage />} />
+            <Route path="/cart" element={<CartPage userRole={currentRole} user={currentUser} />} />
+            <Route path="/chat" element={<Messaging user={currentUser} />} />
+            <Route path="/profile" element={<ProfilePage user={currentUser} onRoleChange={() => setCurrentRole(db.getCurrentRole())} />} />
+          </Routes>
+        </main>
+
+        <footer style={{
+          textAlign: 'center',
+          padding: '2rem',
+          backgroundColor: '#f9f9f9',
+          color: '#666',
+          borderTop: '1px solid #eee',
+          marginTop: 'auto'
+        }}>
+          <p>© 2026 ប្រមូល។ កសិកម្មដើម្បីទាំងអស់គ្នា។</p>
+        </footer>
+      </div>
+    </Router>
+  );
 }
 
 export default App;

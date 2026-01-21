@@ -1,100 +1,551 @@
-import React, { useState } from 'react';
-import Card from '../components/Card';
-import Input from '../components/Input';
-import Button from '../components/Button';
-import styles from './Messaging.module.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { db } from '../services/mockDB';
 
-const Messaging = () => {
-    const [activeChat, setActiveChat] = useState(1);
-    const [message, setMessage] = useState('');
+const Messaging = ({ user }) => {
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef(null);
 
-    const chats = [
-        { id: 1, name: 'កសិដ្ឋាន សុខា', lastMsg: 'បាទ/ចាស, យើងមាន 500kg។', time: '10:30 ព្រឹក', avatar: 'https://via.placeholder.com/40' },
-        { id: 2, name: 'តារា ដឹកជញ្ជូន', lastMsg: 'អ្នកបើកបរទៅដល់ហើយ។', time: 'ម្សិលមិញ', avatar: 'https://via.placeholder.com/40' },
-    ];
+  const currentUser = db.getCurrentUser();
+  const allUsers = db._read('users');
 
-    const messages = [
-        { id: 1, sender: 'them', text: 'សួស្តី, តើស្រូវផ្កាម្លិះនៅមានទេ?', time: '10:00 ព្រឹក' },
-        { id: 2, sender: 'me', text: 'បាទ/ចាស, យើងនៅសល់ប្រហែល 500kg។', time: '10:05 ព្រឹក' },
-        { id: 3, sender: 'them', text: 'ល្អណាស់! អាចផ្ញើលិខិតបញ្ជាក់បានទេ?', time: '10:15 ព្រឹក' },
-        { id: 4, sender: 'me', text: 'បាន, កំពុងផ្ញើជូន។', time: '10:20 ព្រឹក', file: 'certification.pdf' },
-        { id: 5, sender: 'them', text: 'អរគុណ។ តើលក់ដុំតម្លៃប៉ុន្មាន?', time: '10:25 ព្រឹក' },
-        { id: 6, sender: 'me', text: 'សម្រាប់ 500kg, ខ្ញុំអាចជូនតម្លៃ 4,600 ៛/kg។', time: '10:30 ព្រឹក' },
-    ];
+  // Auto-scroll to bottom when messages update
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-    const handleSend = (e) => {
-        e.preventDefault();
-        if (message.trim()) {
-            // Add message logic here (mock)
-            console.log('Sending:', message);
-            setMessage('');
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Load conversations on component mount
+  useEffect(() => {
+    loadConversations();
+    const interval = setInterval(loadConversations, 1000); // Poll for new messages
+    
+    // Check if we need to open a conversation with a specific user
+    const targetUserId = localStorage.getItem('bromoul:chatWithUserId');
+    if (targetUserId) {
+      // Find or create conversation
+      setTimeout(() => {
+        const convKey = getConversationKey(currentUser.id, targetUserId);
+        const existingConv = conversations.find(c => c.id === convKey);
+        if (existingConv) {
+          setActiveConversationId(existingConv.id);
+        } else {
+          startConversation(targetUserId);
         }
-    };
+        localStorage.removeItem('bromoul:chatWithUserId');
+      }, 500);
+    }
+    
+    return () => clearInterval(interval);
+  }, []);
 
-    return (
-        <div className={`container ${styles.messaging}`}>
-            <div className={styles.layout}>
-                <Card className={styles.sidebar}>
-                    <h2 className={styles.sidebarTitle}>សារ</h2>
-                    <div className={styles.chatList}>
-                        {chats.map(chat => (
-                            <div
-                                key={chat.id}
-                                className={`${styles.chatItem} ${activeChat === chat.id ? styles.active : ''}`}
-                                onClick={() => setActiveChat(chat.id)}
-                            >
-                                <img src={chat.avatar} alt={chat.name} className={styles.avatar} />
-                                <div className={styles.chatInfo}>
-                                    <div className={styles.chatHeader}>
-                                        <span className={styles.name}>{chat.name}</span>
-                                        <span className={styles.time}>{chat.time}</span>
-                                    </div>
-                                    <p className={styles.lastMsg}>{chat.lastMsg}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
+  // Load messages when active conversation changes
+  useEffect(() => {
+    if (activeConversationId) {
+      loadMessages(activeConversationId);
+    }
+  }, [activeConversationId]);
 
-                <Card className={styles.chatWindow}>
-                    <div className={styles.chatTop}>
-                        <div className={styles.chatHeaderInfo}>
-                            <img src="https://via.placeholder.com/40" alt="Avatar" className={styles.avatar} />
-                            <h3>កសិដ្ឋាន សុខា</h3>
-                        </div>
-                        <Button variant="outline" className={styles.smBtn}>មើលប្រវត្តិរូប</Button>
-                    </div>
+  const getConversationKey = (userId1, userId2) => {
+    // Create consistent key regardless of order
+    return [userId1, userId2].sort().join('-');
+  };
 
-                    <div className={styles.messagesList}>
-                        {messages.map(msg => (
-                            <div key={msg.id} className={`${styles.messageRow} ${msg.sender === 'me' ? styles.myMsgRow : ''}`}>
-                                <div className={`${styles.bubble} ${msg.sender === 'me' ? styles.myBubble : styles.theirBubble}`}>
-                                    {msg.text}
-                                    {msg.file && (
-                                        <div className={styles.fileAttachment}>
-                                            <span>📄 {msg.file}</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <span className={styles.msgTime}>{msg.time}</span>
-                            </div>
-                        ))}
-                    </div>
+  const loadConversations = () => {
+    setLoading(true);
+    try {
+      const allConversations = db._read('conversations') || [];
+      
+      // Filter conversations where current user is a participant
+      const userConversations = allConversations.filter(conv =>
+        conv.participantIds.includes(currentUser.id)
+      );
 
-                    <form className={styles.inputArea} onSubmit={handleSend}>
-                        <Button variant="outline" type="button" className={styles.attachBtn}>📎</Button>
-                        <input
-                            className={styles.msgInput}
-                            placeholder="វាយសារ..."
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                        />
-                        <Button type="submit" variant="primary">ផ្ញើ</Button>
-                    </form>
-                </Card>
-            </div>
-        </div>
+      // Sort by last message time (newest first)
+      userConversations.sort((a, b) => {
+        const timeA = new Date(a.lastMessageTime || 0).getTime();
+        const timeB = new Date(b.lastMessageTime || 0).getTime();
+        return timeB - timeA;
+      });
+
+      setConversations(userConversations);
+
+      // Auto-select first conversation
+      if (userConversations.length > 0 && !activeConversationId) {
+        setActiveConversationId(userConversations[0].id);
+      }
+    } catch (err) {
+      console.error('Error loading conversations:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMessages = (conversationId) => {
+    try {
+      const conv = conversations.find(c => c.id === conversationId);
+      if (conv) {
+        setMessages(conv.messages || []);
+      }
+    } catch (err) {
+      console.error('Error loading messages:', err);
+    }
+  };
+
+  const startConversation = (otherUserId) => {
+    const convKey = getConversationKey(currentUser.id, otherUserId);
+    let allConversations = db._read('conversations') || [];
+    
+    // Check if conversation already exists
+    let existing = allConversations.find(c => 
+      c.participantIds.includes(currentUser.id) && 
+      c.participantIds.includes(otherUserId)
     );
+
+    if (!existing) {
+      const otherUser = allUsers.find(u => u.id === otherUserId);
+      existing = {
+        id: convKey,
+        participantIds: [currentUser.id, otherUserId],
+        participantNames: {
+          [currentUser.id]: currentUser.name,
+          [otherUserId]: otherUser?.name || 'Unknown'
+        },
+        messages: [],
+        lastMessageTime: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      allConversations.push(existing);
+      db._write('conversations', allConversations);
+    }
+
+    setActiveConversationId(existing.id);
+    loadConversations();
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    
+    if (!messageText.trim() || !activeConversationId) {
+      return;
+    }
+
+    try {
+      const allConversations = db._read('conversations') || [];
+      const convIndex = allConversations.findIndex(c => c.id === activeConversationId);
+      
+      if (convIndex === -1) {
+        console.error('Conversation not found');
+        return;
+      }
+
+      const newMessage = {
+        id: Date.now().toString(),
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        text: messageText,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+
+      allConversations[convIndex].messages.push(newMessage);
+      allConversations[convIndex].lastMessageTime = new Date().toISOString();
+      
+      db._write('conversations', allConversations);
+      
+      setMessages([...messages, newMessage]);
+      setMessageText('');
+      
+      // Trigger update for other components
+      window.dispatchEvent(new Event('messagesUpdated'));
+    } catch (err) {
+      console.error('Error sending message:', err);
+      alert('មានបញ្ហាក្នុងការផ្ញើសារ');
+    }
+  };
+
+  const getOtherParticipant = (conversation) => {
+    const otherUserId = conversation.participantIds.find(id => id !== currentUser.id);
+    return allUsers.find(u => u.id === otherUserId);
+  };
+
+  const getLastMessage = (conversation) => {
+    if (conversation.messages.length === 0) return '';
+    const lastMsg = conversation.messages[conversation.messages.length - 1];
+    const isMe = lastMsg.senderId === currentUser.id;
+    return (isMe ? 'ខ្ញុំ: ' : '') + (lastMsg.text.length > 30 ? lastMsg.text.substring(0, 30) + '...' : lastMsg.text);
+  };
+
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMinutes = Math.floor((now - date) / 60000);
+
+    if (diffMinutes < 1) return 'ឥឡូវ';
+    if (diffMinutes < 60) return diffMinutes + ' នាទីមុន';
+    if (diffMinutes < 1440) return Math.floor(diffMinutes / 60) + ' ម៉ោងមុន';
+    
+    return date.toLocaleDateString('km-KH');
+  };
+
+  const activeConversation = conversations.find(c => c.id === activeConversationId);
+  const otherParticipant = activeConversation ? getOtherParticipant(activeConversation) : null;
+
+  return (
+    <div className="container" style={{ paddingTop: '40px', paddingBottom: '80px' }}>
+      <h1 style={{ marginBottom: '24px' }}>💬 សារ</h1>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '300px 1fr',
+        gap: '24px',
+        height: 'calc(100vh - 200px)',
+        minHeight: '600px'
+      }}>
+        {/* Conversations Sidebar */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #e0e0e0',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            padding: '16px',
+            borderBottom: '1px solid #e0e0e0',
+            fontWeight: '600',
+            fontSize: '16px'
+          }}>
+            ការសន្ទនា
+          </div>
+
+          {/* Conversations List */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {conversations.length === 0 ? (
+              <div style={{
+                padding: '24px 16px',
+                textAlign: 'center',
+                color: '#999',
+                fontSize: '14px'
+              }}>
+                មិនមានការសន្ទនាទេ
+              </div>
+            ) : (
+              conversations.map(conv => {
+                const otherUser = getOtherParticipant(conv);
+                return (
+                  <div
+                    key={conv.id}
+                    onClick={() => setActiveConversationId(conv.id)}
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid #f0f0f0',
+                      cursor: 'pointer',
+                      background: activeConversationId === conv.id ? '#e8f5e9' : 'white',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeConversationId !== conv.id) {
+                        e.currentTarget.style.background = '#f9f9f9';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeConversationId !== conv.id) {
+                        e.currentTarget.style.background = 'white';
+                      }
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px'
+                    }}>
+                      <span style={{
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        color: '#333'
+                      }}>
+                        {otherUser?.name || 'Unknown'}
+                      </span>
+                      <span style={{
+                        fontSize: '12px',
+                        color: '#999'
+                      }}>
+                        {formatTime(conv.lastMessageTime)}
+                      </span>
+                    </div>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '13px',
+                      color: '#666',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {getLastMessage(conv)}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Start New Conversation */}
+          <div style={{
+            padding: '16px',
+            borderTop: '1px solid #e0e0e0',
+            background: '#f9f9f9'
+          }}>
+            <div style={{ fontSize: '12px', marginBottom: '8px', fontWeight: '600', color: '#666' }}>
+              ចាប់ផ្តើមថ្មី
+            </div>
+            <div style={{
+              maxHeight: '150px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              {allUsers
+                .filter(u => u.id !== currentUser.id)
+                .filter(u => !conversations.some(c => c.participantIds.includes(u.id)))
+                .map(user => (
+                  <button
+                    key={user.id}
+                    onClick={() => startConversation(user.id)}
+                    style={{
+                      padding: '8px 12px',
+                      background: 'white',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      textAlign: 'left',
+                      transition: 'all 0.2s',
+                      color: '#333',
+                      fontFamily: 'Noto Sans Khmer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#4CAF50';
+                      e.currentTarget.style.color = 'white';
+                      e.currentTarget.style.borderColor = '#4CAF50';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.color = '#333';
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                    }}
+                  >
+                    {user.name}
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Chat Window */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #e0e0e0',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+          {activeConversation && otherParticipant ? (
+            <>
+              {/* Chat Header */}
+              <div style={{
+                padding: '16px',
+                borderBottom: '1px solid #e0e0e0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: '#f9f9f9'
+              }}>
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>
+                    {otherParticipant.name}
+                  </h3>
+                  <p style={{ margin: '0', fontSize: '12px', color: '#999' }}>
+                    {otherParticipant.role === 'farmer' ? '🚜 កសិករ' : '🛒 អ្នកទិញ'}
+                  </p>
+                </div>
+                <div style={{
+                  padding: '6px 12px',
+                  background: '#e8f5e9',
+                  color: '#2e7d32',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}>
+                  {otherParticipant.location || 'Unknown'}
+                </div>
+              </div>
+
+              {/* Messages List */}
+              <div style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '16px',
+                background: '#f5f5f5',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                {messages.length === 0 ? (
+                  <div style={{
+                    textAlign: 'center',
+                    color: '#999',
+                    paddingTop: '40px',
+                    fontSize: '14px'
+                  }}>
+                    មិនមានសារទេ។ ចាប់ផ្តើមការសន្ទនា!
+                  </div>
+                ) : (
+                  messages.map(msg => {
+                    const isMyMessage = msg.senderId === currentUser.id;
+                    return (
+                      <div
+                        key={msg.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
+                          alignItems: 'flex-end',
+                          gap: '8px'
+                        }}
+                      >
+                        <div style={{
+                          maxWidth: '70%',
+                          background: isMyMessage ? '#4CAF50' : 'white',
+                          color: isMyMessage ? 'white' : '#333',
+                          padding: '12px 16px',
+                          borderRadius: isMyMessage ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                          wordWrap: 'break-word',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                          border: isMyMessage ? 'none' : '1px solid #e0e0e0'
+                        }}>
+                          <p style={{
+                            margin: '0 0 4px 0',
+                            fontSize: '14px',
+                            lineHeight: '1.4'
+                          }}>
+                            {msg.text}
+                          </p>
+                          <span style={{
+                            fontSize: '11px',
+                            opacity: 0.7,
+                            display: 'block',
+                            textAlign: 'right'
+                          }}>
+                            {formatTime(msg.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <form onSubmit={sendMessage} style={{
+                padding: '16px',
+                borderTop: '1px solid #e0e0e0',
+                display: 'flex',
+                gap: '12px',
+                background: 'white'
+              }}>
+                <input
+                  type="text"
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="វាយសារ..."
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '24px',
+                    fontSize: '16px',
+                    fontFamily: 'Noto Sans Khmer',
+                    outline: 'none',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#4CAF50'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = '#e0e0e0'}
+                />
+                <button
+                  type="submit"
+                  disabled={!messageText.trim()}
+                  style={{
+                    padding: '12px 24px',
+                    background: messageText.trim() ? '#4CAF50' : '#e0e0e0',
+                    color: messageText.trim() ? 'white' : '#999',
+                    border: 'none',
+                    borderRadius: '24px',
+                    cursor: messageText.trim() ? 'pointer' : 'not-allowed',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    fontFamily: 'Noto Sans Khmer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (messageText.trim()) {
+                      e.currentTarget.style.background = '#43a047';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (messageText.trim()) {
+                      e.currentTarget.style.background = '#4CAF50';
+                    }
+                  }}
+                >
+                  ផ្ញើ
+                </button>
+              </form>
+            </>
+          ) : (
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#999',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              <div style={{ fontSize: '48px' }}>💬</div>
+              <p>ជ្រើសរើស ឬបង្កើតការសន្ទនា ដើម្បីចាប់ផ្តើម</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Responsive Styles */}
+      <style>{`
+        @media (max-width: 768px) {
+          [style*="gridTemplateColumns: '300px 1fr'"] {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
 };
 
 export default Messaging;

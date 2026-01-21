@@ -17,21 +17,21 @@ const LandingPage = () => {
                     <p className={styles.heroSubtitle}>
                         ភ្ជាប់ទំនាក់ទំនងផ្ទាល់ជាមួយកសិករ និងអ្នកទិញដែលមានការផ្ទៀងផ្ទាត់ តាមរយៈប្រព័ន្ធផ្សារ និងបណ្តាញដឹកជញ្ជូនដ៏មានតម្លាភាព។
                     </p>
-                    <div className={styles.heroActions}>
-                        <Link to="/farmer-dashboard" onClick={() => localStorage.setItem('bromoul:role', 'farmer')}>
+                    {/* <div className={styles.heroActions}>
+                        <Link to="/Marketplace" onClick={() => localStorage.setItem('bromoul:role', 'farmer')}>
                             <Button variant="primary" className={styles.ctaBtn}>ចូលជាកសិករ</Button>
                         </Link>
-                        <Link to="/buyer-dashboard" onClick={() => localStorage.setItem('bromoul:role', 'buyer')}>
+                        <Link to="/Marketplace" onClick={() => localStorage.setItem('bromoul:role', 'buyer')}>
                             <Button variant="secondary" className={styles.ctaBtn}>ចូលជាអ្នកទិញ</Button>
                         </Link>
-                    </div>
+                    </div> */}
                 </div>
             </section>
 
             {/* Features Section */}
             <section className={styles.features}>
                 <div className="container">
-                    <h2 className={styles.sectionTitle}>ហេតុអ្វីជ្រើសរើស ព្រមមូល?</h2>
+                    <h2 className={styles.sectionTitle}>ហេតុអ្វីជ្រើសរើស ប្រមូល?</h2>
                     <div className={styles.featureGrid}>
                         <Card className={styles.featureCard}>
                             <div className={styles.iconWrapper} style={{ backgroundColor: '#e8f5e9', color: '#4CAF50' }}>
@@ -51,7 +51,7 @@ const LandingPage = () => {
                             <div className={styles.iconWrapper} style={{ backgroundColor: '#e3f2fd', color: '#2196F3' }}>
 
                             </div>
-                            <h3 className={styles.featureTitle}>ឆ្លង (Chhlon)</h3>
+                            <h3 className={styles.featureTitle}>ការដឹកជញ្ជូន</h3>
                             <p className={styles.featureText}>ប្រព័ន្ធតាមដានការដឹកជញ្ជូន និងគណនាតម្លៃដឹក ទាំងការដឹកធម្មតា និងដឹកត្រជាក់។</p>
                         </Card>
                         <Card className={styles.featureCard}>

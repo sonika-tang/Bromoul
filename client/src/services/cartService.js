@@ -1,43 +1,35 @@
-
-import api from './api';
+import { StorageService } from './storageService';
 
 export const CartService = {
-    getCart: async (userId) => {
-        if (!userId) {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            userId = user.id;
-        }
-        if (!userId) return [];
-        const res = await api.get(`/cart/${userId}`);
-        return res.data;
-    },
+  getCart: async () => {
+    return await StorageService.read('cart');
+  },
 
-    addToCart: async (listingId, quantity, userId) => {
-        if (!userId) {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            userId = user.id;
-        }
-        const res = await api.post('/cart', {
-            user_id: userId,
-            listing_id: listingId,
-            quantity
-        });
-        window.dispatchEvent(new Event('cartUpdated'));
-        return res.data;
-    },
-
-    removeFromCart: async (itemId) => {
-        await api.delete(`/cart/${itemId}`);
-        window.dispatchEvent(new Event('cartUpdated'));
-    },
-
-    checkout: async (userId, deliveryOption, paymentMethod) => {
-        const res = await api.post('/cart/checkout', {
-            user_id: userId,
-            delivery_option: deliveryOption,
-            payment_method: paymentMethod
-        });
-        window.dispatchEvent(new Event('cartUpdated'));
-        return res.data;
+  addItem: async (listing, quantity = 1) => {
+    const cart = await StorageService.read('cart');
+    const existing = cart.find(item => item.id === listing.id);
+    
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      cart.push({ ...listing, quantity });
     }
+    
+    await StorageService.write('cart', cart);
+    window.dispatchEvent(new Event('cartUpdated'));
+    return cart;
+  },
+
+  removeItem: async (listingId) => {
+    const cart = await StorageService.read('cart');
+    const filtered = cart.filter(item => item.id !== listingId);
+    await StorageService.write('cart', filtered);
+    window.dispatchEvent(new Event('cartUpdated'));
+    return filtered;
+  },
+
+  clear: async () => {
+    await StorageService.write('cart', []);
+    window.dispatchEvent(new Event('cartUpdated'));
+  }
 };

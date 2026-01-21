@@ -5,7 +5,7 @@ import { ListingService } from '../services/api';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const AnalyticsPage = () => {
+const Analytics = () => {
     const [chartData, setChartData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -62,4 +62,4 @@ const AnalyticsPage = () => {
     );
 };
 
-export default AnalyticsPage;
+export default Analytics;

@@ -68,7 +68,7 @@ const PaymentModal = ({ onClose, onConfirm, totalAmount }) => {
 
                                         {status === 'paid' ? (
                                             <div className={styles.successMsg}>
-                                                ✅ ការទូទាត់ជោគជ័យ! (Paid)
+                                                ការទូទាត់ជោគជ័យ! (Paid)
                                                 <button className={styles.confirmBtn} onClick={onConfirm}>បន្ត (Continue)</button>
                                             </div>
                                         ) : (

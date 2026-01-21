@@ -142,7 +142,7 @@ const Marketplace = ({ userRole, user }) => {
           <option value="">គ្រប់ដំណាំ</option>
           {crops.map(c => (
             <option key={c.id} value={c.id}>
-              {c.icon} {c.name_kh}
+              {c.name_kh}
             </option>
           ))}
         </select>

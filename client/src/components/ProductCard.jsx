@@ -47,7 +47,7 @@ const ProductCard = ({ product, isRequest }) => {
 
                     <div className={styles.actions}>
                         <button className={styles.chatBtn} onClick={handleChat}>
-                            💬 ឆាត (Chat)
+                            ឆាត (Chat)
                         </button>
                         {/* Only show "Add to Cart" for Supply items */}
                         {!isRequest && <button

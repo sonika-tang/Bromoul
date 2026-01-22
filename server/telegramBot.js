@@ -29,7 +29,7 @@ if (token) {
     };
 
     const message =
-      `សូមស្វាគមន៍មកកាន់ ព្រមមូល (Bromoul)! 🌱\n\n` +
+      `សូមស្វាគមន៍មកកាន់ ប្រមូល (Bromoul)! 🌱\n\n` +
       `ចុចប៊ូតុងខាងក្រោមដើម្បីចាប់ផ្តើមប្រើប្រាស់។`;
 
     bot.sendMessage(chatId, message, opts);

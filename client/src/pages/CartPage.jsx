@@ -498,7 +498,7 @@ const CartPage = ({ userRole, user }) => {
                                             />
                                             <div style={{ padding: '16px' }}>
                                                 <h3 style={{ margin: '0 0 8px 0' }}>
-                                                    {crop?.icon} {crop?.name_kh}
+                                                    {crop?.name_kh}
                                                 </h3>
                                                 <p style={{
                                                     margin: '4px 0',

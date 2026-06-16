@@ -3,7 +3,44 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../services/mockDB';
 import styles from '../styles/Marketplace.module.css';
 
-const Marketplace = ({ userRole, user }) => {
+/* ── Inline icons ─────────────────────────────────────────── */
+const IconPin = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+  </svg>
+);
+const IconScale = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3v18" /><path d="M5 7h14" /><path d="M5 7l-3 6a3 3 0 006 0z" /><path d="M19 7l3 6a3 3 0 01-6 0z" /><path d="M8 21h8" />
+  </svg>
+);
+const IconStore = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l1-5h16l1 5" /><path d="M4 9v11a1 1 0 001 1h14a1 1 0 001-1V9" /><path d="M3 9a3 3 0 006 0 3 3 0 006 0 3 3 0 006 0" />
+  </svg>
+);
+const IconUser = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+  </svg>
+);
+const IconCheck = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+const IconChat = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+    <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+  </svg>
+);
+const IconCalendar = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+    <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const Marketplace = ({ user }) => {
   const [activeTab, setActiveTab] = useState('products');
   const [listings, setListings] = useState([]);
   const [selectedCrop, setSelectedCrop] = useState('');
@@ -11,6 +48,7 @@ const Marketplace = ({ userRole, user }) => {
   const navigate = useNavigate();
 
   const crops = db._read('crops');
+  const users = db._read('users');
 
   useEffect(() => {
     loadListings();
@@ -42,21 +80,13 @@ const Marketplace = ({ userRole, user }) => {
   });
 
   const handleChat = (listing) => {
-    const otherUserId = listing.user_id;
-    
-    // Store the target user ID to open chat with
-    localStorage.setItem('bromoul:chatWithUserId', otherUserId);
-    
-    // Navigate to messages page
+    localStorage.setItem('bromoul:chatWithUserId', listing.user_id);
     navigate('/chat');
   };
 
   const handleAddToCart = (listing) => {
     const cart = JSON.parse(localStorage.getItem('bromoul:cart') || '[]');
-    cart.push({
-      ...listing,
-      cartId: Date.now().toString()
-    });
+    cart.push({ ...listing, cartId: Date.now().toString() });
     localStorage.setItem('bromoul:cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cartUpdated'));
     alert('បានបន្ថែមទៅកន្ត្រក!');
@@ -70,254 +100,143 @@ const Marketplace = ({ userRole, user }) => {
   };
 
   return (
-    <div className={`container ${styles.container}`} style={{ paddingTop: '40px', paddingBottom: '80px' }}>
+    <div className={styles.page}>
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '32px'
-      }}>
-        <h1 style={{ margin: 0, fontSize: '32px' }}>
-          ផ្សារ
+      <header className={styles.header}>
+        <span className={styles.tag}>ផ្សារ · Psar</span>
+        <h1 className={styles.title}>
+          <span className={styles.titleIcon}><IconStore /></span>
+          ទីផ្សារកសិកម្ម
         </h1>
-      </div>
+        <p className={styles.subtitle}>
+          ភ្ជាប់កសិករ ទៅ ផ្សារទំនើបដោយផ្ទាល់ — ដោយគ្មានឈ្មួញកណ្តាល តម្លៃថ្លាភ្លឺ និងគុណភាពច្បាស់លាស់។
+        </p>
+      </header>
 
-      {/* Tabs and Filter */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px',
-        flexWrap: 'wrap',
-        gap: '16px'
-      }}>
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #e0e0e0' }}>
+      {/* Controls */}
+      <div className={styles.controls}>
+        <div className={styles.tabs}>
           <button
             onClick={() => setActiveTab('products')}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '12px 16px',
-              fontSize: '16px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              borderBottom: activeTab === 'products' ? '2px solid #4CAF50' : 'none',
-              color: activeTab === 'products' ? '#4CAF50' : '#757575',
-              marginBottom: '-2px'
-            }}
+            className={`${styles.tab} ${activeTab === 'products' ? styles.tabActiveSupply : ''}`}
           >
-            ផលិតផលកសិករ
+            <IconUser /> ផលិតផលកសិករ
           </button>
           <button
             onClick={() => setActiveTab('requests')}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '12px 16px',
-              fontSize: '16px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              borderBottom: activeTab === 'requests' ? '2px solid #FF9800' : 'none',
-              color: activeTab === 'requests' ? '#FF9800' : '#757575',
-              marginBottom: '-2px'
-            }}
+            className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActiveDemand : ''}`}
           >
-            សំណើអ្នកទិញ
+            <IconStore /> សំណើផ្សារទំនើប
           </button>
         </div>
-
-        {/* Filter by Crop */}
-        <select
-          value={selectedCrop}
-          onChange={(e) => setSelectedCrop(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontFamily: 'Noto Sans Khmer'
-          }}
-        >
-          <option value="">គ្រប់ដំណាំ</option>
-          {crops.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.name_kh}
-            </option>
-          ))}
-        </select>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-          កំពុងដំណើរការ...
-        </div>
-      )}
+      {/* Crop filter chips */}
+      <div className={styles.cropFilter}>
+        <button
+          onClick={() => setSelectedCrop('')}
+          className={`${styles.cropChip} ${selectedCrop === '' ? styles.cropChipActive : ''}`}
+        >
+          គ្រប់ដំណាំ
+        </button>
+        {crops.map(c => (
+          <button
+            key={c.id}
+            onClick={() => setSelectedCrop(c.id)}
+            className={`${styles.cropChip} ${selectedCrop === c.id ? styles.cropChipActive : ''}`}
+          >
+            {c.name_kh}
+          </button>
+        ))}
+      </div>
 
-      {/* Listings Grid */}
+      {/* Loading */}
+      {loading && <div className={styles.loading}>កំពុងដំណើរការ...</div>}
+
+      {/* Grid */}
       {!loading && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '24px'
-        }}>
+        <div className={styles.grid}>
           {filteredListings.length === 0 ? (
-            <div style={{
-              gridColumn: '1 / -1',
-              textAlign: 'center',
-              padding: '40px',
-              color: '#999'
-            }}>
-              គ្មានលក់ដំណាំទេ
+            <div className={styles.empty}>
+              <span className={styles.emptyIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+                  <path d="M2 21c0-3 1.85-5.36 5.08-6" />
+                </svg>
+              </span>
+              {activeTab === 'products' ? 'គ្មានផលិតផលកសិករទេ' : 'គ្មានសំណើពីផ្សារទំនើបទេ'}
             </div>
           ) : (
             filteredListings.map(listing => {
               const crop = crops.find(c => c.id === listing.crop_id);
+              const party = users.find(u => u.id === listing.user_id);
               const isMyListing = user?.id === listing.user_id;
+              const isSupply = listing.type === 'supply';
+              const image = listing.photo_url || crop?.image;
 
               return (
-                <div
-                  key={listing.id}
-                  style={{
-                    background: 'white',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                    border: '1px solid #e0e0e0',
-                    transition: 'all 0.2s',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)'}
-                >
+                <div key={listing.id} className={styles.card}>
                   {/* Image */}
-                  <div style={{
-                    height: '200px',
-                    background: '#f0f0f0',
-                    overflow: 'hidden'
-                  }}>
-                    <img
-                      src={listing.photo_url || 'https://via.placeholder.com/400x300'}
-                      alt={crop?.name_kh}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
-                    />
+                  <div className={styles.imageWrap}>
+                    <img src={image} alt={crop?.name_kh} className={styles.image} loading="lazy" />
+                    <span className={`${styles.typeBadge} ${isSupply ? styles.typeSupply : styles.typeDemand}`}>
+                      {isSupply ? 'ផលិតផល' : 'សំណើទិញ'}
+                    </span>
+                    {crop?.season && (
+                      <span className={styles.seasonBadge}>
+                        <IconCalendar /> {crop.season}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Content */}
-                  <div style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                      <h3 style={{ margin: '0', fontSize: '18px', fontWeight: '600' }}>
-                        {crop?.icon} {crop?.name_kh}
-                      </h3>
-                      <span style={{
-                        background: listing.type === 'supply' ? '#e8f5e9' : '#fff3e0',
-                        color: listing.type === 'supply' ? '#2e7d32' : '#f57c00',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '600'
-                      }}>
-                        {listing.type === 'supply' ? 'ផលិតផល' : 'សំណើ'}
+                  {/* Body */}
+                  <div className={styles.body}>
+                    <h3 className={styles.cropName}>
+                      {crop?.name_kh}
+                    </h3>
+                    {crop?.name_en && <div className={styles.nameEn}>{crop.name_en}</div>}
+
+                    <div className={styles.meta}>
+                      <div className={styles.metaRow}>
+                        <IconScale />
+                        បរិមាណ៖ {listing.quantity?.toLocaleString()} {listing.unit}
+                      </div>
+                      <div className={styles.metaRow}>
+                        <IconPin />
+                        {listing.location}
+                      </div>
+                      <div className={styles.metaRow}>
+                        {isSupply ? <IconUser /> : <IconStore />}
+                        <span className={styles.party}>
+                          {party?.name || (isSupply ? 'កសិករ' : 'អ្នកទិញ')}
+                          {party?.verified && (
+                            <span className={styles.verified}><IconCheck /> ផ្ទៀងផ្ទាត់</span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.price}>
+                      <span className={`${styles.priceValue} ${isSupply ? styles.priceSupply : styles.priceDemand}`}>
+                        {(isSupply ? listing.price_riel : listing.budget_riel)?.toLocaleString()} ៛
+                      </span>
+                      <span className={styles.priceUnit}>
+                        {isSupply ? `/ ${listing.unit}` : `/ ${listing.unit} (ថវិកា)`}
                       </span>
                     </div>
 
-                    {/* Details */}
-                    <div style={{ marginBottom: '12px', fontSize: '14px', color: '#666' }}>
-                      <p style={{ margin: '4px 0' }}>
-                        បរិមាណ៖ {listing.quantity} {listing.unit}
-                      </p>
-                      <p style={{ margin: '4px 0' }}>
-                        📍 {listing.location}
-                      </p>
-                      {listing.type === 'supply' && (
-                        <p style={{ margin: '4px 0', fontWeight: '600', color: '#4CAF50' }}>
-                          {listing.price_riel?.toLocaleString()} ៛
-                        </p>
-                      )}
-                      {listing.type === 'demand' && (
-                        <p style={{ margin: '4px 0', fontWeight: '600', color: '#FF9800' }}>
-                          ថវិកា៖ {listing.budget_riel?.toLocaleString()} ៛
-                        </p>
-                      )}
-                    </div>
-
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => handleChat(listing)}
-                        style={{
-                          flex: 1,
-                          padding: '8px',
-                          border: '1px solid #e0e0e0',
-                          background: 'white',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          transition: 'all 0.2s',
-                          color: '#4CAF50'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#e8f5e9';
-                          e.currentTarget.style.borderColor = '#4CAF50';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'white';
-                          e.currentTarget.style.borderColor = '#e0e0e0';
-                        }}
-                      >
-                        ឆាត
+                    <div className={styles.actions}>
+                      <button onClick={() => handleChat(listing)} className={styles.btnChat}>
+                        <IconChat /> ឆាត
                       </button>
-
-                      {listing.type === 'supply' && !isMyListing && (
-                        <button
-                          onClick={() => handleAddToCart(listing)}
-                          style={{
-                            flex: 1,
-                            padding: '8px',
-                            border: 'none',
-                            background: '#4CAF50',
-                            color: 'white',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#43a047'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = '#4CAF50'}
-                        >
+                      {isSupply && !isMyListing && (
+                        <button onClick={() => handleAddToCart(listing)} className={styles.btnCart}>
                           + កន្ត្រក
                         </button>
                       )}
-
                       {isMyListing && (
-                        <button
-                          onClick={() => handleDeleteListing(listing.id)}
-                          style={{
-                            flex: 1,
-                            padding: '8px',
-                            border: '1px solid #d32f2f',
-                            background: 'white',
-                            color: '#d32f2f',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#ffebee';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'white';
-                          }}
-                        >
+                        <button onClick={() => handleDeleteListing(listing.id)} className={styles.btnDelete}>
                           លុប
                         </button>
                       )}

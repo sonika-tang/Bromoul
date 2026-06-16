@@ -246,7 +246,7 @@ const ProfilePage = ({ user, onRoleChange }) => {
               >
                 {crops.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.icon} {c.name_kh}
+                    {c.name_kh}
                   </option>
                 ))}
               </select>

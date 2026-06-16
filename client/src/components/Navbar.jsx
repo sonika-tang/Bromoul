@@ -4,22 +4,11 @@ import { Menu, X } from 'lucide-react';
 import styles from './Navbar.module.css';
 import logo from '../assets/Bromoul-logo.png';
 
-const BromoulLogo = () => (
-  <div style={{
-    fontFamily: 'Noto Sans Khmer',
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-    letterSpacing: '1px'
-  }}>
-    <span style={{ color: '#4CAF50' }}>ព</span>
-    <span style={{ color: '#FF9800' }}>រ</span>
-  </div>
-);
-
-const Navbar = ({ userRole, user }) => {
+const Navbar = ({ userRole }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
 
@@ -29,7 +18,7 @@ const Navbar = ({ userRole, user }) => {
     { label: 'វិភាគ', path: '/vipheak' },
     { label: 'កន្ត្រក', path: '/cart', hasBadge: true },
     { label: 'សារ', path: '/chat' },
-    { label: 'គណនី', path: '/profile' }
+    { label: 'គណនី', path: '/profile' },
   ];
 
   useEffect(() => {
@@ -42,17 +31,24 @@ const Navbar = ({ userRole, user }) => {
     return () => window.removeEventListener('cartUpdated', updateCount);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <nav className={styles.navbar}>
+    <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''}`}>
       <div className={styles.navContainer}>
+
         {/* Logo */}
         <Link to="/" className={styles.logoLink}>
-          <img src={logo} alt="logo" style={{ width: '60px', height: '45px' }} />
+          <img src={logo} alt="Bromoul" className={styles.logoImg} />
         </Link>
 
-        {/* Desktop Menu */}
+        {/* Desktop links */}
         <div className={styles.desktopMenu}>
-          {navItems.map(item => (
+          {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -60,63 +56,47 @@ const Navbar = ({ userRole, user }) => {
             >
               {item.label}
               {item.hasBadge && cartCount > 0 && (
-                <span className={styles.badge}>
-                  {cartCount}
-                </span>
+                <span className={styles.badge}>{cartCount}</span>
               )}
             </Link>
           ))}
         </div>
 
-        {/* Role Badge & Mobile Toggle */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px'
-        }}>
-          {/* Role Badge */}
-          <div style={{
-            padding: '6px 12px',
-            borderRadius: '20px',
-            fontSize: '12px',
-            fontWeight: '600',
-            background: userRole === 'farmer' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)',
-            color: userRole === 'farmer' ? '#4CAF50' : '#FF9800'
-          }}>
+        {/* Right side */}
+        <div className={styles.navRight}>
+          <div className={`${styles.roleBadge} ${userRole === 'farmer' ? styles.roleFarmer : styles.roleBuyer}`}>
             {userRole === 'farmer' ? 'កសិករ' : 'អ្នកទិញ'}
           </div>
 
-          {/* Mobile Toggle */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={styles.mobileToggle}
             aria-label="Toggle menu"
+            aria-expanded={isOpen}
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className={styles.mobileMenu}>
-          {navItems.map(item => (
+      {/* Mobile menu */}
+      <div className={`${styles.mobileMenu} ${isOpen ? styles.mobileMenuOpen : ''}`}>
+        <div className={styles.mobileMenuInner}>
+          {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`${styles.mobileLink} ${isActive(item.path) ? styles.active : ''}`}
+              className={`${styles.mobileLink} ${isActive(item.path) ? styles.mobileLinkActive : ''}`}
               onClick={() => setIsOpen(false)}
             >
               {item.label}
               {item.hasBadge && cartCount > 0 && (
-                <span className={styles.badge}>
-                  {cartCount}
-                </span>
+                <span className={styles.badge}>{cartCount}</span>
               )}
             </Link>
           ))}
         </div>
-      )}
+      </div>
     </nav>
   );
 };

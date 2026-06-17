@@ -46,8 +46,8 @@ function App() {
             <Route path="/psar" element={<Marketplace userRole={currentRole} user={currentUser} />} />
             <Route path="/vipheak" element={<AnalyticsPage />} />
             <Route path="/cart" element={<CartPage userRole={currentRole} user={currentUser} />} />
-            <Route path="/chat" element={<Messaging user={currentUser} />} />
-            <Route path="/profile" element={<ProfilePage user={currentUser} onRoleChange={() => setCurrentRole(db.getCurrentRole())} />} />
+            <Route path="/chat" element={<Messaging key={currentUser?.id} user={currentUser} />} />
+            <Route path="/profile" element={<ProfilePage user={currentUser} onRoleChange={() => { setCurrentRole(db.getCurrentRole()); setCurrentUser(db.getCurrentUser()); }} />} />
           </Routes>
         </main>
 

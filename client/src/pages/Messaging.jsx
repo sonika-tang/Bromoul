@@ -1,549 +1,366 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../services/mockDB';
+import styles from './Messaging.module.css';
 
-const Messaging = ({ user }) => {
+/* ── Quick-reply suggestions by current user role ─────────── */
+const QUICK_REPLIES = {
+  farmer: [
+    'ផលិតផលស្រស់ ប្រមូលផលថ្មីៗ',
+    'តម្លៃអាចចរចាបាន',
+    'អាចដឹកជញ្ជូនបាន',
+    'ចង់ទិញ ប៉ុន្មានគីឡូ?',
+    'Wholesale មានបញ្ចុះតម្លៃ',
+    'ផ្ញើ Location ទៅ',
+  ],
+  buyer: [
+    'ផលិតផលនៅ Stock ទេ?',
+    'តម្លៃ ១ គីឡូ ប៉ុន្មាន?',
+    'អាចដឹកទៅ ភ្នំពេញ ទេ?',
+    'យើងត្រូវការ ១ តោន/សប្តាហ៍',
+    'មានការធានាគុណភាពទេ?',
+    'ចង់ Sign Contract',
+  ],
+};
+
+/* ── Icons ────────────────────────────────────────────────── */
+const IconChat = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+  </svg>
+);
+
+const IconSend = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </svg>
+);
+
+const Messaging = () => {
   const [conversations, setConversations] = useState([]);
-  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [messageText, setMessageText] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [text, setText] = useState('');
   const messagesEndRef = useRef(null);
+  const activeConvIdRef = useRef(null);
 
+  // Always read live from localStorage so interval callbacks are never stale
   const currentUser = db.getCurrentUser();
+  const currentRole = db.getCurrentRole();
   const allUsers = db._read('users');
 
-  // Auto-scroll to bottom when messages update
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const quickReplies = QUICK_REPLIES[currentRole] || QUICK_REPLIES.farmer;
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Keep ref in sync so interval can access latest value without stale closure
+  useEffect(() => { activeConvIdRef.current = activeConvId; }, [activeConvId]);
 
-  // Load conversations on component mount
   useEffect(() => {
     loadConversations();
-    const interval = setInterval(loadConversations, 1000); // Poll for new messages
-    
-    // Check if we need to open a conversation with a specific user
-    const targetUserId = localStorage.getItem('bromoul:chatWithUserId');
-    if (targetUserId) {
-      // Find or create conversation
-      setTimeout(() => {
-        const convKey = getConversationKey(currentUser.id, targetUserId);
-        const existingConv = conversations.find(c => c.id === convKey);
-        if (existingConv) {
-          setActiveConversationId(existingConv.id);
-        } else {
-          startConversation(targetUserId);
-        }
-        localStorage.removeItem('bromoul:chatWithUserId');
-      }, 500);
+    const interval = setInterval(loadConversations, 1500);
+
+    const targetId = localStorage.getItem('bromoul:chatWithUserId');
+    if (targetId) {
+      localStorage.removeItem('bromoul:chatWithUserId');
+      setTimeout(() => openOrCreate(targetId), 300);
     }
-    
+
     return () => clearInterval(interval);
   }, []);
 
-  // Load messages when active conversation changes
   useEffect(() => {
-    if (activeConversationId) {
-      loadMessages(activeConversationId);
+    if (activeConvId) {
+      const conv = db._read('conversations').find(c => c.id === activeConvId);
+      if (conv) setMessages(conv.messages || []);
     }
-  }, [activeConversationId]);
+  }, [activeConvId, conversations]);
 
-  const getConversationKey = (userId1, userId2) => {
-    // Create consistent key regardless of order
-    return [userId1, userId2].sort().join('-');
-  };
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const convKey = (a, b) => [a, b].sort().join('-');
 
   const loadConversations = () => {
-    setLoading(true);
-    try {
-      const allConversations = db._read('conversations') || [];
-      
-      // Filter conversations where current user is a participant
-      const userConversations = allConversations.filter(conv =>
-        conv.participantIds.includes(currentUser.id)
-      );
-
-      // Sort by last message time (newest first)
-      userConversations.sort((a, b) => {
-        const timeA = new Date(a.lastMessageTime || 0).getTime();
-        const timeB = new Date(b.lastMessageTime || 0).getTime();
-        return timeB - timeA;
-      });
-
-      setConversations(userConversations);
-
-      // Auto-select first conversation
-      if (userConversations.length > 0 && !activeConversationId) {
-        setActiveConversationId(userConversations[0].id);
-      }
-    } catch (err) {
-      console.error('Error loading conversations:', err);
-    } finally {
-      setLoading(false);
-    }
+    // Read user fresh every tick — avoids stale closure when role switches
+    const user = db.getCurrentUser();
+    if (!user) return;
+    const all = db._read('conversations') || [];
+    const mine = all
+      .filter(c => c.participantIds.includes(user.id))
+      .sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+    setConversations(mine);
+    setActiveConvId(prev => {
+      if (!prev && mine.length > 0) return mine[0].id;
+      return prev;
+    });
   };
 
-  const loadMessages = (conversationId) => {
-    try {
-      const conv = conversations.find(c => c.id === conversationId);
-      if (conv) {
-        setMessages(conv.messages || []);
-      }
-    } catch (err) {
-      console.error('Error loading messages:', err);
-    }
-  };
-
-  const startConversation = (otherUserId) => {
-    const convKey = getConversationKey(currentUser.id, otherUserId);
-    let allConversations = db._read('conversations') || [];
-    
-    // Check if conversation already exists
-    let existing = allConversations.find(c => 
-      c.participantIds.includes(currentUser.id) && 
-      c.participantIds.includes(otherUserId)
+  const openOrCreate = (otherId) => {
+    const user = db.getCurrentUser();
+    if (!user) return;
+    const key = convKey(user.id, otherId);
+    const all = db._read('conversations') || [];
+    let conv = all.find(c =>
+      c.participantIds.includes(user.id) && c.participantIds.includes(otherId)
     );
-
-    if (!existing) {
-      const otherUser = allUsers.find(u => u.id === otherUserId);
-      existing = {
-        id: convKey,
-        participantIds: [currentUser.id, otherUserId],
+    if (!conv) {
+      const other = allUsers.find(u => u.id === otherId);
+      conv = {
+        id: key,
+        participantIds: [user.id, otherId],
         participantNames: {
-          [currentUser.id]: currentUser.name,
-          [otherUserId]: otherUser?.name || 'Unknown'
+          [user.id]: user.name,
+          [otherId]: other?.name || 'Unknown',
         },
         messages: [],
         lastMessageTime: new Date().toISOString(),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
-      allConversations.push(existing);
-      db._write('conversations', allConversations);
+      all.push(conv);
+      db._write('conversations', all);
     }
-
-    setActiveConversationId(existing.id);
+    setActiveConvId(conv.id);
     loadConversations();
   };
 
-  const sendMessage = (e) => {
-    e.preventDefault();
-    
-    if (!messageText.trim() || !activeConversationId) {
-      return;
-    }
+  const sendMessage = (e, quickText) => {
+    if (e) e.preventDefault();
+    const msgText = quickText || text;
+    const convId = activeConvIdRef.current;
+    if (!msgText.trim() || !convId) return;
 
-    try {
-      const allConversations = db._read('conversations') || [];
-      const convIndex = allConversations.findIndex(c => c.id === activeConversationId);
-      
-      if (convIndex === -1) {
-        console.error('Conversation not found');
-        return;
-      }
+    const user = db.getCurrentUser();
+    if (!user) return;
 
-      const newMessage = {
-        id: Date.now().toString(),
-        senderId: currentUser.id,
-        senderName: currentUser.name,
-        text: messageText,
-        timestamp: new Date().toISOString(),
-        read: false
-      };
+    const all = db._read('conversations') || [];
+    const idx = all.findIndex(c => c.id === convId);
+    if (idx === -1) return;
 
-      allConversations[convIndex].messages.push(newMessage);
-      allConversations[convIndex].lastMessageTime = new Date().toISOString();
-      
-      db._write('conversations', allConversations);
-      
-      setMessages([...messages, newMessage]);
-      setMessageText('');
-      
-      // Trigger update for other components
-      window.dispatchEvent(new Event('messagesUpdated'));
-    } catch (err) {
-      console.error('Error sending message:', err);
-      alert('មានបញ្ហាក្នុងការផ្ញើសារ');
-    }
+    const msg = {
+      id: Date.now().toString(),
+      senderId: user.id,
+      senderName: user.name,
+      text: msgText,
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+
+    all[idx].messages.push(msg);
+    all[idx].lastMessageTime = msg.timestamp;
+    db._write('conversations', all);
+    setMessages(prev => [...prev, msg]);
+    setText('');
+    window.dispatchEvent(new Event('messagesUpdated'));
   };
 
-  const getOtherParticipant = (conversation) => {
-    const otherUserId = conversation.participantIds.find(id => id !== currentUser.id);
-    return allUsers.find(u => u.id === otherUserId);
+  const getOther = (conv) => {
+    const otherId = conv.participantIds.find(id => id !== currentUser.id);
+    return allUsers.find(u => u.id === otherId);
   };
 
-  const getLastMessage = (conversation) => {
-    if (conversation.messages.length === 0) return '';
-    const lastMsg = conversation.messages[conversation.messages.length - 1];
-    const isMe = lastMsg.senderId === currentUser.id;
-    return (isMe ? 'ខ្ញុំ: ' : '') + (lastMsg.text.length > 30 ? lastMsg.text.substring(0, 30) + '...' : lastMsg.text);
+  const getPreview = (conv) => {
+    if (!conv.messages.length) return 'ចាប់ផ្ដើមការសន្ទនា...';
+    const last = conv.messages[conv.messages.length - 1];
+    const prefix = last.senderId === currentUser.id ? 'ខ្ញុំ: ' : '';
+    const t = last.text;
+    return prefix + (t.length > 32 ? t.slice(0, 32) + '…' : t);
   };
 
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMinutes = Math.floor((now - date) / 60000);
-
-    if (diffMinutes < 1) return 'ឥឡូវ';
-    if (diffMinutes < 60) return diffMinutes + ' នាទីមុន';
-    if (diffMinutes < 1440) return Math.floor(diffMinutes / 60) + ' ម៉ោងមុន';
-    
-    return date.toLocaleDateString('km-KH');
+  const fmtTime = (ts) => {
+    const diff = Math.floor((Date.now() - new Date(ts)) / 60000);
+    if (diff < 1) return 'ឥឡូវ';
+    if (diff < 60) return diff + ' នាទី';
+    if (diff < 1440) return Math.floor(diff / 60) + ' ម៉ោង';
+    return new Date(ts).toLocaleDateString('km-KH');
   };
 
-  const activeConversation = conversations.find(c => c.id === activeConversationId);
-  const otherParticipant = activeConversation ? getOtherParticipant(activeConversation) : null;
+  const activeConv = conversations.find(c => c.id === activeConvId);
+  const otherUser = activeConv ? getOther(activeConv) : null;
+  const isBuyer = (u) => u?.role === 'buyer';
+
+  const newContactList = allUsers
+    .filter(u => u.id !== currentUser.id)
+    .filter(u => !conversations.some(c => c.participantIds.includes(u.id)));
+
+  const totalMsgs = conversations.reduce((n, c) => n + c.messages.length, 0);
 
   return (
-    <div className="container" style={{ paddingTop: '40px', paddingBottom: '80px' }}>
-      <h1 style={{ marginBottom: '24px' }}>💬 សារ</h1>
+    <div className={styles.page}>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '300px 1fr',
-        gap: '24px',
-        height: 'calc(100vh - 200px)',
-        minHeight: '600px'
-      }}>
-        {/* Conversations Sidebar */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          border: '1px solid #e0e0e0',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            padding: '16px',
-            borderBottom: '1px solid #e0e0e0',
-            fontWeight: '600',
-            fontSize: '16px'
-          }}>
-            ការសន្ទនា
-          </div>
-
-          {/* Conversations List */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            {conversations.length === 0 ? (
-              <div style={{
-                padding: '24px 16px',
-                textAlign: 'center',
-                color: '#999',
-                fontSize: '14px'
-              }}>
-                មិនមានការសន្ទនាទេ
-              </div>
-            ) : (
-              conversations.map(conv => {
-                const otherUser = getOtherParticipant(conv);
-                return (
-                  <div
-                    key={conv.id}
-                    onClick={() => setActiveConversationId(conv.id)}
-                    style={{
-                      padding: '12px 16px',
-                      borderBottom: '1px solid #f0f0f0',
-                      cursor: 'pointer',
-                      background: activeConversationId === conv.id ? '#e8f5e9' : 'white',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (activeConversationId !== conv.id) {
-                        e.currentTarget.style.background = '#f9f9f9';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (activeConversationId !== conv.id) {
-                        e.currentTarget.style.background = 'white';
-                      }
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '4px'
-                    }}>
-                      <span style={{
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        color: '#333'
-                      }}>
-                        {otherUser?.name || 'Unknown'}
-                      </span>
-                      <span style={{
-                        fontSize: '12px',
-                        color: '#999'
-                      }}>
-                        {formatTime(conv.lastMessageTime)}
-                      </span>
-                    </div>
-                    <p style={{
-                      margin: '0',
-                      fontSize: '13px',
-                      color: '#666',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}>
-                      {getLastMessage(conv)}
-                    </p>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Start New Conversation */}
-          <div style={{
-            padding: '16px',
-            borderTop: '1px solid #e0e0e0',
-            background: '#f9f9f9'
-          }}>
-            <div style={{ fontSize: '12px', marginBottom: '8px', fontWeight: '600', color: '#666' }}>
-              ចាប់ផ្តើមថ្មី
+      {/* ── Compact gradient header ──────────────────────────── */}
+      <div className={styles.header}>
+        <div className={styles.headerBlob1} />
+        <div className={styles.headerBlob2} />
+        <div className="container">
+          <div className={styles.headerInner}>
+            <div className={styles.headerLeft}>
+              <span className={styles.headerTag}>សារ · Chat</span>
+              <h1 className={styles.headerTitle}>ការសន្ទនា</h1>
             </div>
-            <div style={{
-              maxHeight: '150px',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px'
-            }}>
-              {allUsers
-                .filter(u => u.id !== currentUser.id)
-                .filter(u => !conversations.some(c => c.participantIds.includes(u.id)))
-                .map(user => (
-                  <button
-                    key={user.id}
-                    onClick={() => startConversation(user.id)}
-                    style={{
-                      padding: '8px 12px',
-                      background: 'white',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      textAlign: 'left',
-                      transition: 'all 0.2s',
-                      color: '#333',
-                      fontFamily: 'Noto Sans Khmer'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#4CAF50';
-                      e.currentTarget.style.color = 'white';
-                      e.currentTarget.style.borderColor = '#4CAF50';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'white';
-                      e.currentTarget.style.color = '#333';
-                      e.currentTarget.style.borderColor = '#e0e0e0';
-                    }}
-                  >
-                    {user.name}
-                  </button>
-                ))}
+            <div className={styles.headerMeta}>
+              <div className={styles.headerStat}>
+                <strong>{conversations.length}</strong>
+                <span>សន្ទនា</span>
+              </div>
+              <div className={styles.headerStatLine} />
+              <div className={styles.headerStat}>
+                <strong>{totalMsgs}</strong>
+                <span>សារទាំងអស់</span>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Chat Window */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          border: '1px solid #e0e0e0',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}>
-          {activeConversation && otherParticipant ? (
-            <>
-              {/* Chat Header */}
-              <div style={{
-                padding: '16px',
-                borderBottom: '1px solid #e0e0e0',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                background: '#f9f9f9'
-              }}>
-                <div>
-                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>
-                    {otherParticipant.name}
-                  </h3>
-                  <p style={{ margin: '0', fontSize: '12px', color: '#999' }}>
-                    {otherParticipant.role === 'farmer' ? '🚜 កសិករ' : '🛒 អ្នកទិញ'}
-                  </p>
-                </div>
-                <div style={{
-                  padding: '6px 12px',
-                  background: '#e8f5e9',
-                  color: '#2e7d32',
-                  borderRadius: '20px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
-                  {otherParticipant.location || 'Unknown'}
-                </div>
-              </div>
-
-              {/* Messages List */}
-              <div style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '16px',
-                background: '#f5f5f5',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px'
-              }}>
-                {messages.length === 0 ? (
-                  <div style={{
-                    textAlign: 'center',
-                    color: '#999',
-                    paddingTop: '40px',
-                    fontSize: '14px'
-                  }}>
-                    មិនមានសារទេ។ ចាប់ផ្តើមការសន្ទនា!
-                  </div>
-                ) : (
-                  messages.map(msg => {
-                    const isMyMessage = msg.senderId === currentUser.id;
-                    return (
-                      <div
-                        key={msg.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
-                          alignItems: 'flex-end',
-                          gap: '8px'
-                        }}
-                      >
-                        <div style={{
-                          maxWidth: '70%',
-                          background: isMyMessage ? '#4CAF50' : 'white',
-                          color: isMyMessage ? 'white' : '#333',
-                          padding: '12px 16px',
-                          borderRadius: isMyMessage ? '12px 12px 0 12px' : '12px 12px 12px 0',
-                          wordWrap: 'break-word',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                          border: isMyMessage ? 'none' : '1px solid #e0e0e0'
-                        }}>
-                          <p style={{
-                            margin: '0 0 4px 0',
-                            fontSize: '14px',
-                            lineHeight: '1.4'
-                          }}>
-                            {msg.text}
-                          </p>
-                          <span style={{
-                            fontSize: '11px',
-                            opacity: 0.7,
-                            display: 'block',
-                            textAlign: 'right'
-                          }}>
-                            {formatTime(msg.timestamp)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Message Input */}
-              <form onSubmit={sendMessage} style={{
-                padding: '16px',
-                borderTop: '1px solid #e0e0e0',
-                display: 'flex',
-                gap: '12px',
-                background: 'white'
-              }}>
-                <input
-                  type="text"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="វាយសារ..."
-                  style={{
-                    flex: 1,
-                    padding: '12px 16px',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '24px',
-                    fontSize: '16px',
-                    fontFamily: 'Noto Sans Khmer',
-                    outline: 'none',
-                    transition: 'border-color 0.2s'
-                  }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = '#4CAF50'}
-                  onBlur={(e) => e.currentTarget.style.borderColor = '#e0e0e0'}
-                />
-                <button
-                  type="submit"
-                  disabled={!messageText.trim()}
-                  style={{
-                    padding: '12px 24px',
-                    background: messageText.trim() ? '#4CAF50' : '#e0e0e0',
-                    color: messageText.trim() ? 'white' : '#999',
-                    border: 'none',
-                    borderRadius: '24px',
-                    cursor: messageText.trim() ? 'pointer' : 'not-allowed',
-                    fontWeight: '600',
-                    fontSize: '14px',
-                    fontFamily: 'Noto Sans Khmer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (messageText.trim()) {
-                      e.currentTarget.style.background = '#43a047';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (messageText.trim()) {
-                      e.currentTarget.style.background = '#4CAF50';
-                    }
-                  }}
-                >
-                  ផ្ញើ
-                </button>
-              </form>
-            </>
-          ) : (
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#999',
-              flexDirection: 'column',
-              gap: '16px'
-            }}>
-              <div style={{ fontSize: '48px' }}>💬</div>
-              <p>ជ្រើសរើស ឬបង្កើតការសន្ទនា ដើម្បីចាប់ផ្តើម</p>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Responsive Styles */}
-      <style>{`
-        @media (max-width: 768px) {
-          [style*="gridTemplateColumns: '300px 1fr'"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
+      {/* ── Chat area ────────────────────────────────────────── */}
+      <div className={styles.chatArea}>
+        <div className="container" style={{ height: '100%' }}>
+          <div className={styles.layout}>
+
+            {/* ── Sidebar ─────────────────────────────────────── */}
+            <div className={styles.sidebar}>
+              <div className={styles.sidebarHeader}>ការសន្ទនា ({conversations.length})</div>
+
+              <div className={styles.convList}>
+                {conversations.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--color-text-lighter)', fontSize: '13px' }}>
+                    មិនទាន់មានការសន្ទនា
+                  </div>
+                ) : conversations.map(conv => {
+                  const other = getOther(conv);
+                  const isActive = conv.id === activeConvId;
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => setActiveConvId(conv.id)}
+                      className={`${styles.convItem} ${isActive ? styles.convItemActive : ''}`}
+                    >
+                      <div className={`${styles.convAvatar} ${isBuyer(other) ? styles.convAvatarBuyer : ''}`}>
+                        {isBuyer(other) ? '🏪' : '🌾'}
+                      </div>
+                      <div className={styles.convInfo}>
+                        <div className={styles.convNameRow}>
+                          <span className={styles.convName}>{other?.name || 'Unknown'}</span>
+                          <span className={styles.convTime}>{fmtTime(conv.lastMessageTime)}</span>
+                        </div>
+                        <p className={styles.convPreview}>{getPreview(conv)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Start new conversation */}
+              {newContactList.length > 0 && (
+                <div className={styles.newConvPanel}>
+                  <div className={styles.newConvLabel}>ទំនាក់ទំនងថ្មី</div>
+                  <div className={styles.newConvList}>
+                    {newContactList.map(u => (
+                      <button
+                        key={u.id}
+                        onClick={() => openOrCreate(u.id)}
+                        className={`${styles.newConvBtn} ${isBuyer(u) ? styles.newConvBtnBuyer : ''}`}
+                      >
+                        {isBuyer(u) ? '🏪' : '🌾'} {u.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Chat window ──────────────────────────────────── */}
+            <div className={styles.chatWindow}>
+              {activeConv && otherUser ? (
+                <>
+                  {/* Header */}
+                  <div className={styles.chatHeader}>
+                    <div className={styles.chatHeaderLeft}>
+                      <div className={`${styles.chatAvatar} ${isBuyer(otherUser) ? styles.chatAvatarBuyer : ''}`}>
+                        {isBuyer(otherUser) ? '🏪' : '🌾'}
+                      </div>
+                      <div>
+                        <p className={styles.chatContactName}>{otherUser.name}</p>
+                        <span className={`${styles.chatContactRole} ${isBuyer(otherUser) ? styles.rolePillBuyer : styles.rolePillFarmer}`}>
+                          {isBuyer(otherUser) ? 'ផ្សារទំនើប · Buyer' : 'កសិករ · Farmer'}
+                        </span>
+                      </div>
+                    </div>
+                    {otherUser.location && (
+                      <span className={styles.chatLocBadge}>📍 {otherUser.location}</span>
+                    )}
+                  </div>
+
+                  {/* Messages */}
+                  <div className={styles.messages}>
+                    {messages.length === 0 ? (
+                      <div className={styles.emptyChat}>
+                        <div className={styles.emptyChatIcon}><IconChat /></div>
+                        <p className={styles.emptyChatText}>មិនទាន់មានសារ</p>
+                        <p className={styles.emptyChatHint}>
+                          ប្រើ "ចម្លើយរហ័ស" ខាងក្រោម ឬ វាយសារដើម្បីចាប់ផ្ដើម
+                        </p>
+                      </div>
+                    ) : messages.map(msg => {
+                      const mine = msg.senderId === currentUser.id;
+                      return (
+                        <div key={msg.id} className={`${styles.msgRow} ${mine ? styles.msgRowMine : ''}`}>
+                          {!mine && (
+                            <div className={`${styles.msgAvatarSmall} ${isBuyer(otherUser) ? styles.convAvatarBuyer : ''}`}>
+                              {isBuyer(otherUser) ? '🏪' : '🌾'}
+                            </div>
+                          )}
+                          <div className={`${styles.bubble} ${mine ? styles.bubbleMine : styles.bubbleTheirs}`}>
+                            <p className={styles.bubbleText}>{msg.text}</p>
+                            <span className={styles.bubbleTime}>{fmtTime(msg.timestamp)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Quick replies */}
+                  <div className={styles.quickReplies}>
+                    {quickReplies.map((q, i) => (
+                      <button
+                        key={i}
+                        className={styles.quickReplyChip}
+                        onClick={() => sendMessage(null, q)}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Input */}
+                  <form onSubmit={sendMessage} className={styles.inputArea}>
+                    <input
+                      className={styles.msgInput}
+                      type="text"
+                      value={text}
+                      onChange={e => setText(e.target.value)}
+                      placeholder="វាយសារ..."
+                    />
+                    <button type="submit" disabled={!text.trim()} className={styles.sendBtn}>
+                      <IconSend /> ផ្ញើ
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <div className={styles.noChatSelected}>
+                  <div className={styles.noChatIcon}><IconChat /></div>
+                  <p className={styles.noChatText}>ជ្រើសរើសការសន្ទនា</p>
+                  <p className={styles.noChatHint}>
+                    ចុចលើការសន្ទនានៅខាងឆ្វេង ឬ បង្កើតទំនាក់ទំនងថ្មី
+                  </p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

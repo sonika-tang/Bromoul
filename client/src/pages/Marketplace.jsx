@@ -99,155 +99,188 @@ const Marketplace = ({ user }) => {
     }
   };
 
+  const supplyCount = listings.filter(l => l.type === 'supply').length;
+  const demandCount = listings.filter(l => l.type === 'demand').length;
+
   return (
     <div className={styles.page}>
-      {/* Header */}
-      <header className={styles.header}>
-        <span className={styles.tag}>ផ្សារ · Psar</span>
-        <h1 className={styles.title}>
-          <span className={styles.titleIcon}><IconStore /></span>
-          ទីផ្សារកសិកម្ម
-        </h1>
-        <p className={styles.subtitle}>
-          ភ្ជាប់កសិករ ទៅ ផ្សារទំនើបដោយផ្ទាល់ — ដោយគ្មានឈ្មួញកណ្តាល តម្លៃថ្លាភ្លឺ និងគុណភាពច្បាស់លាស់។
-        </p>
-      </header>
 
-      {/* Controls */}
-      <div className={styles.controls}>
-        <div className={styles.tabs}>
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`${styles.tab} ${activeTab === 'products' ? styles.tabActiveSupply : ''}`}
-          >
-            <IconUser /> ផលិតផលកសិករ
-          </button>
-          <button
-            onClick={() => setActiveTab('requests')}
-            className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActiveDemand : ''}`}
-          >
-            <IconStore /> សំណើផ្សារទំនើប
-          </button>
+      {/* ─── Hero Header ───────────────────────────────────────── */}
+      <section className={styles.heroSection}>
+        <div className={styles.heroBg}>
+          <div className={styles.blob1} />
+          <div className={styles.blob2} />
         </div>
-      </div>
-
-      {/* Crop filter chips */}
-      <div className={styles.cropFilter}>
-        <button
-          onClick={() => setSelectedCrop('')}
-          className={`${styles.cropChip} ${selectedCrop === '' ? styles.cropChipActive : ''}`}
-        >
-          គ្រប់ដំណាំ
-        </button>
-        {crops.map(c => (
-          <button
-            key={c.id}
-            onClick={() => setSelectedCrop(c.id)}
-            className={`${styles.cropChip} ${selectedCrop === c.id ? styles.cropChipActive : ''}`}
-          >
-            {c.name_kh}
-          </button>
-        ))}
-      </div>
-
-      {/* Loading */}
-      {loading && <div className={styles.loading}>កំពុងដំណើរការ...</div>}
-
-      {/* Grid */}
-      {!loading && (
-        <div className={styles.grid}>
-          {filteredListings.length === 0 ? (
-            <div className={styles.empty}>
-              <span className={styles.emptyIcon}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
-                  <path d="M2 21c0-3 1.85-5.36 5.08-6" />
-                </svg>
-              </span>
-              {activeTab === 'products' ? 'គ្មានផលិតផលកសិករទេ' : 'គ្មានសំណើពីផ្សារទំនើបទេ'}
+        <div className="container">
+          <div className={styles.heroInner}>
+            <span className={styles.tag}>ផ្សារ · Psar</span>
+            <h1 className={styles.title}>
+              ទីផ្សារ<span className={styles.titleAccent}>កសិកម្ម</span>
+            </h1>
+            <p className={styles.subtitle}>
+              ភ្ជាប់កសិករ ទៅ ផ្សារទំនើបដោយផ្ទាល់ — ដោយគ្មានឈ្មួញកណ្តាល
+              <br />តម្លៃសមរម្យ និងគុណភាពច្បាស់លាស់
+            </p>
+            <div className={styles.statsBar}>
+              <div className={styles.stat}>
+                <strong>{supplyCount}</strong>
+                <span>ផលិតផលកសិករ</span>
+              </div>
+              <div className={styles.statLine} />
+              <div className={styles.stat}>
+                <strong>{demandCount}</strong>
+                <span>សំណើផ្សារ</span>
+              </div>
+              <div className={styles.statLine} />
+              <div className={styles.stat}>
+                <strong>{crops.length}</strong>
+                <span>ប្រភេទដំណាំ</span>
+              </div>
             </div>
-          ) : (
-            filteredListings.map(listing => {
-              const crop = crops.find(c => c.id === listing.crop_id);
-              const party = users.find(u => u.id === listing.user_id);
-              const isMyListing = user?.id === listing.user_id;
-              const isSupply = listing.type === 'supply';
-              const image = listing.photo_url || crop?.image;
-
-              return (
-                <div key={listing.id} className={styles.card}>
-                  {/* Image */}
-                  <div className={styles.imageWrap}>
-                    <img src={image} alt={crop?.name_kh} className={styles.image} loading="lazy" />
-                    <span className={`${styles.typeBadge} ${isSupply ? styles.typeSupply : styles.typeDemand}`}>
-                      {isSupply ? 'ផលិតផល' : 'សំណើទិញ'}
-                    </span>
-                    {crop?.season && (
-                      <span className={styles.seasonBadge}>
-                        <IconCalendar /> {crop.season}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Body */}
-                  <div className={styles.body}>
-                    <h3 className={styles.cropName}>
-                      {crop?.name_kh}
-                    </h3>
-                    {crop?.name_en && <div className={styles.nameEn}>{crop.name_en}</div>}
-
-                    <div className={styles.meta}>
-                      <div className={styles.metaRow}>
-                        <IconScale />
-                        បរិមាណ៖ {listing.quantity?.toLocaleString()} {listing.unit}
-                      </div>
-                      <div className={styles.metaRow}>
-                        <IconPin />
-                        {listing.location}
-                      </div>
-                      <div className={styles.metaRow}>
-                        {isSupply ? <IconUser /> : <IconStore />}
-                        <span className={styles.party}>
-                          {party?.name || (isSupply ? 'កសិករ' : 'អ្នកទិញ')}
-                          {party?.verified && (
-                            <span className={styles.verified}><IconCheck /> ផ្ទៀងផ្ទាត់</span>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={styles.price}>
-                      <span className={`${styles.priceValue} ${isSupply ? styles.priceSupply : styles.priceDemand}`}>
-                        {(isSupply ? listing.price_riel : listing.budget_riel)?.toLocaleString()} ៛
-                      </span>
-                      <span className={styles.priceUnit}>
-                        {isSupply ? `/ ${listing.unit}` : `/ ${listing.unit} (ថវិកា)`}
-                      </span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className={styles.actions}>
-                      <button onClick={() => handleChat(listing)} className={styles.btnChat}>
-                        <IconChat /> ឆាត
-                      </button>
-                      {isSupply && !isMyListing && (
-                        <button onClick={() => handleAddToCart(listing)} className={styles.btnCart}>
-                          + កន្ត្រក
-                        </button>
-                      )}
-                      {isMyListing && (
-                        <button onClick={() => handleDeleteListing(listing.id)} className={styles.btnDelete}>
-                          លុប
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
+          </div>
         </div>
-      )}
+      </section>
+
+      {/* ─── Content ───────────────────────────────────────────── */}
+      <div className={styles.content}>
+        <div className="container">
+
+          {/* Controls / Tabs */}
+          <div className={styles.controls}>
+            <div className={styles.tabs}>
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`${styles.tab} ${activeTab === 'products' ? styles.tabActiveSupply : ''}`}
+              >
+                <IconUser /> ផលិតផលកសិករ
+              </button>
+              <button
+                onClick={() => setActiveTab('requests')}
+                className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActiveDemand : ''}`}
+              >
+                <IconStore /> សំណើផ្សារទំនើប
+              </button>
+            </div>
+          </div>
+
+          {/* Crop filter chips */}
+          <div className={styles.cropFilter}>
+            <button
+              onClick={() => setSelectedCrop('')}
+              className={`${styles.cropChip} ${selectedCrop === '' ? styles.cropChipActive : ''}`}
+            >
+              គ្រប់ដំណាំ
+            </button>
+            {crops.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setSelectedCrop(c.id)}
+                className={`${styles.cropChip} ${selectedCrop === c.id ? styles.cropChipActive : ''}`}
+              >
+                {c.name_kh}
+              </button>
+            ))}
+          </div>
+
+          {/* Loading */}
+          {loading && <div className={styles.loading}>កំពុងដំណើរការ...</div>}
+
+          {/* Grid */}
+          {!loading && (
+            <div className={styles.grid}>
+              {filteredListings.length === 0 ? (
+                <div className={styles.empty}>
+                  <span className={styles.emptyIcon}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+                      <path d="M2 21c0-3 1.85-5.36 5.08-6" />
+                    </svg>
+                  </span>
+                  {activeTab === 'products' ? 'គ្មានផលិតផលកសិករទេ' : 'គ្មានសំណើពីផ្សារទំនើបទេ'}
+                </div>
+              ) : (
+                filteredListings.map(listing => {
+                  const crop = crops.find(c => c.id === listing.crop_id);
+                  const party = users.find(u => u.id === listing.user_id);
+                  const isMyListing = user?.id === listing.user_id;
+                  const isSupply = listing.type === 'supply';
+                  const image = listing.photo_url || crop?.image;
+
+                  return (
+                    <div key={listing.id} className={styles.card}>
+                      {/* Image */}
+                      <div className={styles.imageWrap}>
+                        <img src={image} alt={crop?.name_kh} className={styles.image} loading="lazy" />
+                        <span className={`${styles.typeBadge} ${isSupply ? styles.typeSupply : styles.typeDemand}`}>
+                          {isSupply ? 'ផលិតផល' : 'សំណើទិញ'}
+                        </span>
+                        {crop?.season && (
+                          <span className={styles.seasonBadge}>
+                            <IconCalendar /> {crop.season}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Body */}
+                      <div className={styles.body}>
+                        <h3 className={styles.cropName}>{crop?.name_kh}</h3>
+                        {crop?.name_en && <div className={styles.nameEn}>{crop.name_en}</div>}
+
+                        <div className={styles.meta}>
+                          <div className={styles.metaRow}>
+                            <IconScale />
+                            បរិមាណ៖ {listing.quantity?.toLocaleString()} {listing.unit}
+                          </div>
+                          <div className={styles.metaRow}>
+                            <IconPin />
+                            {listing.location}
+                          </div>
+                          <div className={styles.metaRow}>
+                            {isSupply ? <IconUser /> : <IconStore />}
+                            <span className={styles.party}>
+                              {party?.name || (isSupply ? 'កសិករ' : 'អ្នកទិញ')}
+                              {party?.verified && (
+                                <span className={styles.verified}><IconCheck /> ផ្ទៀងផ្ទាត់</span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={styles.price}>
+                          <span className={`${styles.priceValue} ${isSupply ? styles.priceSupply : styles.priceDemand}`}>
+                            {(isSupply ? listing.price_riel : listing.budget_riel)?.toLocaleString()} ៛
+                          </span>
+                          <span className={styles.priceUnit}>
+                            {isSupply ? `/ ${listing.unit}` : `/ ${listing.unit} (ថវិកា)`}
+                          </span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className={styles.actions}>
+                          <button onClick={() => handleChat(listing)} className={styles.btnChat}>
+                            <IconChat /> ឆាត
+                          </button>
+                          {isSupply && !isMyListing && (
+                            <button onClick={() => handleAddToCart(listing)} className={styles.btnCart}>
+                              + កន្ត្រក
+                            </button>
+                          )}
+                          {isMyListing && (
+                            <button onClick={() => handleDeleteListing(listing.id)} className={styles.btnDelete}>
+                              លុប
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 };

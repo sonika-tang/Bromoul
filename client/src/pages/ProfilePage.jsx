@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { db } from '../services/mockDB';
 import styles from '../styles/ProfilePage.module.css';
 
@@ -23,6 +23,12 @@ const IconCamera = () => (
   </svg>
 );
 
+const IconTrash = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+  </svg>
+);
+
 const ProfilePage = ({ onRoleChange }) => {
   const [activeTab, setActiveTab] = useState('info');
   const [formData, setFormData] = useState({
@@ -36,11 +42,27 @@ const ProfilePage = ({ onRoleChange }) => {
   const [photoBase64, setPhotoBase64] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [myListings, setMyListings] = useState([]);
   const fileInputRef = useRef(null);
 
   const crops = db._read('crops');
   const currentUser = db.getCurrentUser();
   const currentRole = db.getCurrentRole();
+
+  useEffect(() => {
+    loadMyListings();
+    window.addEventListener('listingsUpdated', loadMyListings);
+    window.addEventListener('db_update_listings', loadMyListings);
+    return () => {
+      window.removeEventListener('listingsUpdated', loadMyListings);
+      window.removeEventListener('db_update_listings', loadMyListings);
+    };
+  }, [currentUser?.id]);
+
+  const loadMyListings = () => {
+    const all = db._read('listings');
+    setMyListings(all.filter(l => l.user_id === currentUser?.id));
+  };
 
   const handleRoleSwitch = (role) => {
     db.setCurrentRole(role);
@@ -103,6 +125,7 @@ const ProfilePage = ({ onRoleChange }) => {
       setPhotoPreview(null);
       setPhotoBase64(null);
       window.dispatchEvent(new Event('listingsUpdated'));
+      loadMyListings();
     } catch (err) {
       console.error(err);
       alert('មានបញ្ហា៖ ' + err.message);
@@ -111,7 +134,15 @@ const ProfilePage = ({ onRoleChange }) => {
     }
   };
 
-  const emoji = currentRole === 'farmer' ? '' : '';
+  const handleDeleteListing = async (id) => {
+    if (window.confirm('តើប្រាកដថាលុបចេញទេ?')) {
+      await db.delete('listings', id);
+      loadMyListings();
+      window.dispatchEvent(new Event('listingsUpdated'));
+    }
+  };
+
+  const emoji = currentRole === 'farmer' ? '🌾' : '🏪';
 
   return (
     <div className={styles.page}>
@@ -170,6 +201,15 @@ const ProfilePage = ({ onRoleChange }) => {
               >
                 {currentRole === 'farmer' ? 'ដាក់លក់ផលិតផល' : 'សរសេរសំណើ'}
               </button>
+              <button
+                onClick={() => setActiveTab('my_listings')}
+                className={`${styles.tab} ${activeTab === 'my_listings' ? styles.tabActive : ''}`}
+              >
+                {currentRole === 'farmer' ? 'ផលិតផលរបស់ខ្ញុំ' : 'សំណើរបស់ខ្ញុំ'}
+                {myListings.length > 0 && (
+                  <span className={styles.tabBadge}>{myListings.length}</span>
+                )}
+              </button>
             </div>
 
             {/* Info tab */}
@@ -206,7 +246,7 @@ const ProfilePage = ({ onRoleChange }) => {
               </div>
             )}
 
-            {/* Listings tab */}
+            {/* Create listing tab */}
             {activeTab === 'listings' && (
               <form onSubmit={handleSubmitListing} className={styles.formCard}>
                 <h3 className={styles.formTitle}>
@@ -321,6 +361,67 @@ const ProfilePage = ({ onRoleChange }) => {
                   {loading ? 'កំពុងបង្កើត...' : (currentRole === 'farmer' ? 'ដាក់លក់' : 'ដាក់សំណើ')}
                 </button>
               </form>
+            )}
+
+            {/* My Listings tab */}
+            {activeTab === 'my_listings' && (
+              <div className={styles.myListingsWrap}>
+                {myListings.length === 0 ? (
+                  <div className={styles.myListingsEmpty}>
+                    <span style={{ fontSize: 40 }}>{currentRole === 'farmer' ? '🌾' : '🏪'}</span>
+                    <p>
+                      {currentRole === 'farmer'
+                        ? 'អ្នកមិនទាន់មានផលិតផលណាមួយទេ'
+                        : 'អ្នកមិនទាន់មានសំណើណាមួយទេ'}
+                    </p>
+                    <button
+                      className={currentRole === 'farmer' ? styles.btnSubmitFarmer : styles.btnSubmitBuyer}
+                      style={{ marginTop: 12 }}
+                      onClick={() => setActiveTab('listings')}
+                    >
+                      {currentRole === 'farmer' ? '+ ដាក់លក់ផលិតផល' : '+ សរសេរសំណើ'}
+                    </button>
+                  </div>
+                ) : (
+                  myListings.map(listing => {
+                    const crop = crops.find(c => c.id === listing.crop_id);
+                    const isSupply = listing.type === 'supply';
+                    return (
+                      <div key={listing.id} className={styles.myListingCard}>
+                        <img
+                          src={listing.photo_url || crop?.image}
+                          alt={crop?.name_kh}
+                          className={styles.myListingImage}
+                        />
+                        <div className={styles.myListingBody}>
+                          <div className={styles.myListingTop}>
+                            <span className={`${styles.myListingBadge} ${isSupply ? styles.myListingBadgeSupply : styles.myListingBadgeDemand}`}>
+                              {isSupply ? 'ផលិតផល' : 'សំណើ'}
+                            </span>
+                            <h4 className={styles.myListingName}>{crop?.name_kh}</h4>
+                          </div>
+                          <p className={styles.myListingMeta}>
+                            {listing.quantity?.toLocaleString()} {listing.unit} · {listing.location}
+                          </p>
+                          <p className={styles.myListingPrice}>
+                            {(isSupply ? listing.price_riel : listing.budget_riel)?.toLocaleString()} ៛
+                            <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--color-text-lighter)' }}>
+                              {isSupply ? ` / ${listing.unit}` : ' (ថវិកា)'}
+                            </span>
+                          </p>
+                        </div>
+                        <button
+                          className={styles.myListingDelete}
+                          onClick={() => handleDeleteListing(listing.id)}
+                          title="លុប"
+                        >
+                          <IconTrash />
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             )}
 
           </div>

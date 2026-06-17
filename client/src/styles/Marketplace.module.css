@@ -454,6 +454,29 @@
     box-shadow: 0 6px 18px rgba(76, 175, 80, 0.4);
 }
 
+.btnPropose {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    border: none;
+    background: linear-gradient(135deg, #FF9800 0%, #e65100 100%);
+    color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-khmer);
+    transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.btnPropose:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(255, 152, 0, 0.4);
+}
+
 .btnDelete {
     flex: 1;
     padding: 10px;

@@ -40,15 +40,19 @@ const IconCalendar = () => (
   </svg>
 );
 
-const Marketplace = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('products');
+const Marketplace = ({ userRole, user }) => {
   const [listings, setListings] = useState([]);
   const [selectedCrop, setSelectedCrop] = useState('');
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
   const crops = db._read('crops');
   const users = db._read('users');
+
+  // Farmers see supermarket demand requests; buyers see farmer supply listings
+  const isFarmer = userRole === 'farmer';
+  const visibleType = isFarmer ? 'demand' : 'supply';
 
   useEffect(() => {
     loadListings();
@@ -74,7 +78,7 @@ const Marketplace = ({ user }) => {
   };
 
   const filteredListings = listings.filter(item => {
-    const typeMatch = item.type === (activeTab === 'products' ? 'supply' : 'demand');
+    const typeMatch = item.type === visibleType;
     const cropMatch = !selectedCrop || item.crop_id === selectedCrop;
     return typeMatch && cropMatch;
   });
@@ -84,12 +88,49 @@ const Marketplace = ({ user }) => {
     navigate('/chat');
   };
 
+  // Buyer adds supply listing to cart
   const handleAddToCart = (listing) => {
     const cart = JSON.parse(localStorage.getItem('bromoul:cart') || '[]');
-    cart.push({ ...listing, cartId: Date.now().toString() });
+    cart.push({ ...listing, cartId: Date.now().toString(), quantity: 1 });
     localStorage.setItem('bromoul:cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cartUpdated'));
-    alert('បានបន្ថែមទៅកន្ត្រក!');
+    setToast({ text: `បានបន្ថែមទៅកន្ត្រក!`, color: '#4CAF50', shadow: 'rgba(76,175,80,0.35)' });
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  // Farmer submits a supply proposal in response to a demand listing
+  const handlePropose = (listing) => {
+    const crop = crops.find(c => c.id === listing.crop_id);
+    const buyer = users.find(u => u.id === listing.user_id);
+    const proposal = {
+      id: Date.now().toString() + Math.random().toString().slice(2, 6),
+      proposal: true,
+      seller_id: user.id,
+      buyer_id: listing.user_id,
+      listing_id: listing.id,
+      crop_id: listing.crop_id,
+      crop_name: crop?.name_kh || listing.crop_id,
+      quantity: listing.quantity,
+      unit: listing.unit || 'គីឡូ',
+      price_riel: listing.budget_riel,
+      total_price: (listing.budget_riel || 0) * listing.quantity,
+      payment_status: 'pending',
+      delivery_status: 'offered',
+      seller_name: user?.name || 'កសិករ',
+      buyer_name: buyer?.name || 'ផ្សារទំនើប',
+      photo_url: listing.photo_url || crop?.image || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      delivery_history: [{
+        status: 'offered',
+        timestamp: new Date().toISOString(),
+        message: 'កសិករបានស្នើផ្គត់ផ្គង់',
+      }],
+    };
+    const allOrders = db._read('orders') || [];
+    db._write('orders', [...allOrders, proposal]);
+    setToast({ text: 'បានស្នើ! ផ្សារទំនើបនឹងទូទាត់ប្រាក់', color: '#FF9800', shadow: 'rgba(255,152,0,0.35)' });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const handleDeleteListing = async (listingId) => {
@@ -99,8 +140,7 @@ const Marketplace = ({ user }) => {
     }
   };
 
-  const supplyCount = listings.filter(l => l.type === 'supply').length;
-  const demandCount = listings.filter(l => l.type === 'demand').length;
+  const visibleCount = listings.filter(l => l.type === visibleType).length;
 
   return (
     <div className={styles.page}>
@@ -115,26 +155,31 @@ const Marketplace = ({ user }) => {
           <div className={styles.heroInner}>
             <span className={styles.tag}>ផ្សារ · Psar</span>
             <h1 className={styles.title}>
-              ទីផ្សារ<span className={styles.titleAccent}>កសិកម្ម</span>
+              {isFarmer
+                ? <><span className={styles.titleAccent}>សំណើ</span>ពីផ្សារទំនើប</>
+                : <>ផលិតផល<span className={styles.titleAccent}>កសិករ</span></>
+              }
             </h1>
             <p className={styles.subtitle}>
-              ភ្ជាប់កសិករ ទៅ ផ្សារទំនើបដោយផ្ទាល់ — ដោយគ្មានឈ្មួញកណ្តាល
-              <br />តម្លៃសមរម្យ និងគុណភាពច្បាស់លាស់
+              {isFarmer
+                ? 'មើលអ្វីដែលផ្សារទំនើបកំពុងត្រូវការ — ស្នើផ្គត់ផ្គង់ ហើយទទួលប្រាក់'
+                : 'ស្វែងរកផលិតផលស្រស់ ដោយផ្ទាល់ពីកសិករ — គ្មានឈ្មួញកណ្តាល'
+              }
             </p>
             <div className={styles.statsBar}>
               <div className={styles.stat}>
-                <strong>{supplyCount}</strong>
-                <span>ផលិតផលកសិករ</span>
-              </div>
-              <div className={styles.statLine} />
-              <div className={styles.stat}>
-                <strong>{demandCount}</strong>
-                <span>សំណើផ្សារ</span>
+                <strong>{visibleCount}</strong>
+                <span>{isFarmer ? 'សំណើទិញ' : 'ផលិតផល'}</span>
               </div>
               <div className={styles.statLine} />
               <div className={styles.stat}>
                 <strong>{crops.length}</strong>
                 <span>ប្រភេទដំណាំ</span>
+              </div>
+              <div className={styles.statLine} />
+              <div className={styles.stat}>
+                <strong>{users.length}</strong>
+                <span>អ្នកប្រើ</span>
               </div>
             </div>
           </div>
@@ -145,21 +190,18 @@ const Marketplace = ({ user }) => {
       <div className={styles.content}>
         <div className="container">
 
-          {/* Controls / Tabs */}
+          {/* Role label */}
           <div className={styles.controls}>
             <div className={styles.tabs}>
-              <button
-                onClick={() => setActiveTab('products')}
-                className={`${styles.tab} ${activeTab === 'products' ? styles.tabActiveSupply : ''}`}
+              <div
+                className={`${styles.tab} ${isFarmer ? styles.tabActiveDemand : styles.tabActiveSupply}`}
+                style={{ cursor: 'default' }}
               >
-                <IconUser /> ផលិតផលកសិករ
-              </button>
-              <button
-                onClick={() => setActiveTab('requests')}
-                className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActiveDemand : ''}`}
-              >
-                <IconStore /> សំណើផ្សារទំនើប
-              </button>
+                {isFarmer
+                  ? <><IconStore /> សំណើពីផ្សារទំនើប</>
+                  : <><IconUser /> ផលិតផលកសិករ</>
+                }
+              </div>
             </div>
           </div>
 
@@ -196,7 +238,7 @@ const Marketplace = ({ user }) => {
                       <path d="M2 21c0-3 1.85-5.36 5.08-6" />
                     </svg>
                   </span>
-                  {activeTab === 'products' ? 'គ្មានផលិតផលកសិករទេ' : 'គ្មានសំណើពីផ្សារទំនើបទេ'}
+                  {isFarmer ? 'គ្មានសំណើពីផ្សារទំនើបទេ' : 'គ្មានផលិតផលកសិករទេ'}
                 </div>
               ) : (
                 filteredListings.map(listing => {
@@ -238,7 +280,7 @@ const Marketplace = ({ user }) => {
                           <div className={styles.metaRow}>
                             {isSupply ? <IconUser /> : <IconStore />}
                             <span className={styles.party}>
-                              {party?.name || (isSupply ? 'កសិករ' : 'អ្នកទិញ')}
+                              {party?.name || (isSupply ? 'កសិករ' : 'ផ្សារទំនើប')}
                               {party?.verified && (
                                 <span className={styles.verified}><IconCheck /> ផ្ទៀងផ្ទាត់</span>
                               )}
@@ -260,11 +302,21 @@ const Marketplace = ({ user }) => {
                           <button onClick={() => handleChat(listing)} className={styles.btnChat}>
                             <IconChat /> ឆាត
                           </button>
-                          {isSupply && !isMyListing && (
+
+                          {/* Farmer: propose to supply this demand */}
+                          {isFarmer && !isMyListing && (
+                            <button onClick={() => handlePropose(listing)} className={styles.btnPropose}>
+                              ✓ ស្នើផ្គត់ផ្គង់
+                            </button>
+                          )}
+
+                          {/* Buyer: add farmer supply to cart */}
+                          {!isFarmer && !isMyListing && (
                             <button onClick={() => handleAddToCart(listing)} className={styles.btnCart}>
                               + កន្ត្រក
                             </button>
                           )}
+
                           {isMyListing && (
                             <button onClick={() => handleDeleteListing(listing.id)} className={styles.btnDelete}>
                               លុប
@@ -281,6 +333,19 @@ const Marketplace = ({ user }) => {
 
         </div>
       </div>
+
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 28, right: 24, zIndex: 2000,
+          background: `linear-gradient(135deg, ${toast.color} 0%, ${toast.color}cc 100%)`,
+          color: '#fff', padding: '14px 20px', borderRadius: 12,
+          fontSize: 14, fontWeight: 700,
+          boxShadow: `0 8px 24px ${toast.shadow}`,
+          pointerEvents: 'none',
+        }}>
+          ✓ {toast.text}
+        </div>
+      )}
     </div>
   );
 };

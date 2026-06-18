@@ -589,31 +589,85 @@
     line-height: 1.6;
 }
 
-/* ── Responsive ───────────────────────────────────────────── */
+/* ── Back button (phone only, hidden on desktop) ──────────── */
+.backBtn {
+    display: none;
+}
+
+/* ── hideMobile: no-op on desktop ─────────────────────────── */
+.hideMobile { /* controlled by phone media query */ }
+
+/* ── Responsive: tablet ───────────────────────────────────── */
 @media (max-width: 768px) {
+    .headerMeta { display: none; }
+}
+
+/* ── Responsive: phone ────────────────────────────────────── */
+@media (max-width: 640px) {
     .page {
-        height: auto;
-        min-height: calc(100vh - 64px);
+        height: calc(100vh - 64px);
+        overflow: hidden;
     }
 
     .chatArea {
-        padding: 12px 0 16px;
-        overflow: visible;
+        padding: 8px 0;
+        overflow: hidden;
     }
 
     .layout {
         grid-template-columns: 1fr;
-        height: auto;
-        gap: 12px;
+        height: 100%;
+        gap: 0;
+    }
+
+    /* one panel at a time */
+    .hideMobile {
+        display: none !important;
     }
 
     .sidebar {
-        height: 220px;
+        height: 100%;
+        border-radius: 12px;
     }
 
     .chatWindow {
-        height: 520px;
+        height: 100%;
+        border-radius: 12px;
     }
 
-    .headerMeta { display: none; }
+    /* back button */
+    .backBtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 12px;
+        background: rgba(0,0,0,0.06);
+        border: none;
+        border-radius: 100px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--color-text-main);
+        cursor: pointer;
+        font-family: var(--font-khmer), inherit;
+        white-space: nowrap;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    .backBtn:hover {
+        background: rgba(0,0,0,0.1);
+    }
+
+    /* hide location badge to save header space */
+    .chatLocBadge {
+        display: none;
+    }
+
+    .chatHeader {
+        padding: 10px 12px;
+    }
+
+    .chatContactName {
+        font-size: 14px;
+    }
 }

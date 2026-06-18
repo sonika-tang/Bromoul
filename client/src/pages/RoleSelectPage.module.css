@@ -1,0 +1,204 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f0faf4 0%, #e8f5e9 50%, #e3f2fd 100%);
+  padding: 2rem 1rem;
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blob1 {
+  position: absolute;
+  top: -80px;
+  left: -80px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(76,175,80,0.18) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.blob2 {
+  position: absolute;
+  bottom: -100px;
+  right: -80px;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(33,150,243,0.14) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+}
+
+.logoWrap {
+  margin-bottom: 1.5rem;
+}
+
+.logo {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+}
+
+.title {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 800;
+  color: #1b5e20;
+  margin: 0 0 0.6rem;
+  line-height: 1.25;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #555;
+  margin: 0 0 2.5rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 580px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 2rem 1.75rem;
+  border-radius: 20px;
+  border: 2.5px solid transparent;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  text-align: left;
+}
+
+.card:focus-visible {
+  outline: 3px solid #4CAF50;
+  outline-offset: 3px;
+}
+
+.cardHovered {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.13);
+}
+
+.cardFarmer.cardHovered {
+  border-color: #4CAF50;
+}
+
+.cardBuyer.cardHovered {
+  border-color: #2196F3;
+}
+
+.cardEmoji {
+  font-size: 2.8rem;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.cardRole {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.cardFarmer .cardRole {
+  color: #4CAF50;
+}
+
+.cardBuyer .cardRole {
+  color: #2196F3;
+}
+
+.cardDesc {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 0.25rem 0;
+}
+
+.cardFeatures {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cardFeatures li {
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.cardFarmer .cardFeatures li {
+  color: #2e7d32;
+}
+
+.cardBuyer .cardFeatures li {
+  color: #1565c0;
+}
+
+.cardBtn {
+  margin-top: 1.25rem;
+  width: 100%;
+  text-align: center;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  transition: opacity 0.15s;
+}
+
+.cardFarmer .cardBtn {
+  background: linear-gradient(135deg, #4CAF50, #2e7d32);
+}
+
+.cardBuyer .cardBtn {
+  background: linear-gradient(135deg, #42a5f5, #1565c0);
+}
+
+.card:hover .cardBtn {
+  opacity: 0.9;
+}
+
+.note {
+  font-size: 0.82rem;
+  color: #888;
+  margin-top: 0.5rem;
+}

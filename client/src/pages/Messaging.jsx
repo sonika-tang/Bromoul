@@ -41,8 +41,9 @@ const Messaging = () => {
   const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
-  const messagesEndRef = useRef(null);
+  const [mobileView, setMobileView] = useState('list'); // 'list' | 'chat'
   const activeConvIdRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   // Always read live from localStorage so interval callbacks are never stale
   const currentUser = db.getCurrentUser();
@@ -53,6 +54,11 @@ const Messaging = () => {
 
   // Keep ref in sync so interval can access latest value without stale closure
   useEffect(() => { activeConvIdRef.current = activeConvId; }, [activeConvId]);
+
+  // Scroll to bottom of messages area whenever messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   useEffect(() => {
     loadConversations();
@@ -74,10 +80,6 @@ const Messaging = () => {
     }
   }, [activeConvId, conversations]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   const convKey = (a, b) => [a, b].sort().join('-');
 
   const loadConversations = () => {
@@ -93,6 +95,11 @@ const Messaging = () => {
       if (!prev && mine.length > 0) return mine[0].id;
       return prev;
     });
+  };
+
+  const selectConv = (id) => {
+    setActiveConvId(id);
+    setMobileView('chat');
   };
 
   const openOrCreate = (otherId) => {
@@ -119,7 +126,7 @@ const Messaging = () => {
       all.push(conv);
       db._write('conversations', all);
     }
-    setActiveConvId(conv.id);
+    selectConv(conv.id);
     loadConversations();
   };
 
@@ -218,7 +225,7 @@ const Messaging = () => {
           <div className={styles.layout}>
 
             {/* ── Sidebar ─────────────────────────────────────── */}
-            <div className={styles.sidebar}>
+            <div className={`${styles.sidebar} ${mobileView === 'chat' ? styles.hideMobile : ''}`}>
               <div className={styles.sidebarHeader}>ការសន្ទនា ({conversations.length})</div>
 
               <div className={styles.convList}>
@@ -232,7 +239,7 @@ const Messaging = () => {
                   return (
                     <div
                       key={conv.id}
-                      onClick={() => setActiveConvId(conv.id)}
+                      onClick={() => selectConv(conv.id)}
                       className={`${styles.convItem} ${isActive ? styles.convItemActive : ''}`}
                     >
                       <div className={`${styles.convAvatar} ${isBuyer(other) ? styles.convAvatarBuyer : ''}`}>
@@ -270,12 +277,15 @@ const Messaging = () => {
             </div>
 
             {/* ── Chat window ──────────────────────────────────── */}
-            <div className={styles.chatWindow}>
+            <div className={`${styles.chatWindow} ${mobileView === 'list' ? styles.hideMobile : ''}`}>
               {activeConv && otherUser ? (
                 <>
                   {/* Header */}
                   <div className={styles.chatHeader}>
                     <div className={styles.chatHeaderLeft}>
+                      <button className={styles.backBtn} onClick={() => setMobileView('list')}>
+                        ‹ ត្រឡប់
+                      </button>
                       <div className={`${styles.chatAvatar} ${isBuyer(otherUser) ? styles.chatAvatarBuyer : ''}`}>
                         {isBuyer(otherUser) ? '🏪' : '🌾'}
                       </div>

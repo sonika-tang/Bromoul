@@ -2,6 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { db } from '../services/mockDB';
 import styles from '../styles/ProfilePage.module.css';
 
+const IconLogout = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
+
 const IconCheck = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12" />
@@ -64,9 +72,8 @@ const ProfilePage = ({ onRoleChange }) => {
     setMyListings(all.filter(l => l.user_id === currentUser?.id));
   };
 
-  const handleRoleSwitch = (role) => {
-    db.setCurrentRole(role);
-    if (onRoleChange) onRoleChange();
+  const handleLogout = () => {
+    db.logout();
   };
 
   const handleChange = (e) => {
@@ -163,21 +170,10 @@ const ProfilePage = ({ onRoleChange }) => {
               {currentRole === 'farmer' ? 'កសិករផលិតកម្ម' : 'អ្នកទិញ · ផ្សារទំនើប'}
             </span>
 
-            {/* Role switcher */}
-            <div className={styles.roleSwitcher}>
-              <button
-                onClick={() => handleRoleSwitch('farmer')}
-                className={`${styles.roleBtn} ${currentRole === 'farmer' ? styles.roleBtnActiveFarmer : ''}`}
-              >
-                🌾 កសិករ
-              </button>
-              <button
-                onClick={() => handleRoleSwitch('buyer')}
-                className={`${styles.roleBtn} ${currentRole === 'buyer' ? styles.roleBtnActiveBuyer : ''}`}
-              >
-                🏪 អ្នកទិញ
-              </button>
-            </div>
+            {/* Logout / change role */}
+            <button onClick={handleLogout} className={styles.logoutBtn}>
+              <IconLogout /> ចាកចេញ
+            </button>
           </div>
         </div>
       </section>

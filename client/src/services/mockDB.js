@@ -1,11 +1,11 @@
 // Mock Database Service for LocalStorage Persistence
-// Limited to 4 crops: Mango, Papaya, Banana, Pumpkin
+// Crops: Cucumber, Tomato, Ginger, Radish, Pumpkin
 // Role-based data with no login required
 // Now includes Chat Conversations Support
 
 const DB_PREFIX = 'bromoul:';
 // Bump this when seed data (crops/listings/users) changes so cached browsers re-seed.
-const SCHEMA_VERSION = '3';
+const SCHEMA_VERSION = '4';
 
 const initialData = {
   users: [
@@ -51,30 +51,38 @@ const initialData = {
   crops: [
     {
       id: 'c1',
-      name_kh: 'ស្វាយកែវរមៀត',
-      name_en: 'Keo Romeat Mango',
-      category: 'ផ្លែឈើ',
-      season: 'រដូវកំពូល៖ កុម្ភៈ–មិថុនា',
-      image: 'https://images.unsplash.com/photo-1605027990121-cbae9e0642df?auto=format&fit=crop&q=80&w=600',
+      name_kh: 'ត្រសក់',
+      name_en: 'Cucumber',
+      category: 'បន្លែ',
+      season: 'រដូវវស្សា–ស្លឹករងា',
+      image: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&q=80&w=600',
     },
     {
       id: 'c2',
-      name_kh: 'ល្ហុង',
-      name_en: 'Papaya',
-      category: 'ផ្លែឈើ',
-      season: 'មានពាក់កណ្តាលឆ្នាំ',
-      image: 'https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?auto=format&fit=crop&q=80&w=600',
+      name_kh: 'ប៉េងប៉ោះ',
+      name_en: 'Tomato',
+      category: 'បន្លែ',
+      season: 'រដូវរងា',
+      image: 'https://images.unsplash.com/photo-1546094096-0df4bcabd337?auto=format&fit=crop&q=80&w=600',
     },
     {
       id: 'c3',
-      name_kh: 'ចេក',
-      name_en: 'Banana',
-      category: 'ផ្លែឈើ',
-      season: 'មានពេញមួយឆ្នាំ',
-      image: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?auto=format&fit=crop&q=80&w=600',
+      name_kh: 'ខ្ញី',
+      name_en: 'Ginger',
+      category: 'គ្រឿងទេស',
+      season: 'ពាក់កណ្តាលឆ្នាំ',
+      image: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?auto=format&fit=crop&q=80&w=600',
     },
     {
       id: 'c4',
+      name_kh: 'ឆៃថាវ',
+      name_en: 'Radish',
+      category: 'បន្លែ',
+      season: 'រដូវរងា',
+      image: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?auto=format&fit=crop&q=80&w=600',
+    },
+    {
+      id: 'c5',
       name_kh: 'ល្ពៅ',
       name_en: 'Pumpkin',
       category: 'បន្លែ',
@@ -90,31 +98,31 @@ const initialData = {
       type: 'supply',
       quantity: 500,
       unit: 'គីឡូ',
-      price_riel: 3000,
+      price_riel: 1800,
       status: 'active',
       location: 'កណ្តាល',
-      description: 'ស្វាយកែវរមៀត គុណភាពលេខ១ ប្រមូលផលថ្មី',
-      photo_url: 'https://images.unsplash.com/photo-1605027990121-cbae9e0642df?auto=format&fit=crop&q=80&w=600',
+      description: 'ត្រសក់ស្រស់ គុណភាពលេខ១ ប្រមូលផលថ្មី',
+      photo_url: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&q=80&w=600',
       created_at: new Date(Date.now() - 86400000).toISOString()
     },
     {
       id: 'l2',
       user_id: 'f1',
-      crop_id: 'c3',
+      crop_id: 'c2',
       type: 'supply',
-      quantity: 800,
+      quantity: 600,
       unit: 'គីឡូ',
-      price_riel: 1500,
+      price_riel: 2500,
       status: 'active',
       location: 'កំពង់ចាម',
-      description: 'ចេកស្រស់ ប្រមូលផលពេញមួយឆ្នាំ',
-      photo_url: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?auto=format&fit=crop&q=80&w=600',
+      description: 'ប៉េងប៉ោះស្រស់ ពណ៌ក្រហមស្អាត',
+      photo_url: 'https://images.unsplash.com/photo-1546094096-0df4bcabd337?auto=format&fit=crop&q=80&w=600',
       created_at: new Date(Date.now() - 172800000).toISOString()
     },
     {
       id: 'l5',
       user_id: 'f2',
-      crop_id: 'c4',
+      crop_id: 'c5',
       type: 'supply',
       quantity: 350,
       unit: 'គីឡូ',
@@ -128,31 +136,31 @@ const initialData = {
     {
       id: 'l3',
       user_id: 'b1',
-      crop_id: 'c2',
+      crop_id: 'c3',
       type: 'demand',
-      quantity: 1000,
+      quantity: 800,
       unit: 'គីឡូ',
-      budget_riel: 5000,
+      budget_riel: 4500,
       status: 'active',
       duration: '៧ ថ្ងៃ',
       location: 'ភ្នំពេញ',
-      description: 'Chip Mong ត្រូវការល្ហុងផ្គត់ផ្គង់ប្រចាំសប្តាហ៍ ៥០០–១០០០ គីឡូ',
-      photo_url: 'https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?auto=format&fit=crop&q=80&w=600',
+      description: 'Chip Mong ត្រូវការខ្ញីផ្គត់ផ្គង់ប្រចាំសប្តាហ៍',
+      photo_url: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?auto=format&fit=crop&q=80&w=600',
       created_at: new Date(Date.now() - 43200000).toISOString()
     },
     {
       id: 'l4',
       user_id: 'b2',
-      crop_id: 'c1',
+      crop_id: 'c4',
       type: 'demand',
-      quantity: 2000,
+      quantity: 1000,
       unit: 'គីឡូ',
-      budget_riel: 3200,
+      budget_riel: 2000,
       status: 'active',
       duration: '១៤ ថ្ងៃ',
       location: 'ភ្នំពេញ',
-      description: 'AEON MaxValu ត្រូវការស្វាយកែវរមៀត ១–៣ តោន តម្លៃយុត្តិធម៌',
-      photo_url: 'https://images.unsplash.com/photo-1605027990121-cbae9e0642df?auto=format&fit=crop&q=80&w=600',
+      description: 'AEON MaxValu ត្រូវការក្ដូបស្រស់ ១ តោន',
+      photo_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?auto=format&fit=crop&q=80&w=600',
       created_at: new Date(Date.now() - 129600000).toISOString()
     }
   ],
@@ -230,12 +238,8 @@ class MockDB {
       });
 
       localStorage.setItem(DB_PREFIX + 'schemaVersion', SCHEMA_VERSION);
-      // Refresh the cached current user (its name/location may have changed).
       localStorage.removeItem(DB_PREFIX + 'currentUser');
-
-      if (!localStorage.getItem(DB_PREFIX + 'currentRole')) {
-        localStorage.setItem(DB_PREFIX + 'currentRole', 'farmer');
-      }
+      localStorage.removeItem(DB_PREFIX + 'currentRole');
     }
   }
 
@@ -324,7 +328,6 @@ class MockDB {
   // Role management
   setCurrentRole(role) {
     localStorage.setItem(DB_PREFIX + 'currentRole', role);
-    // Get user for this role
     const users = this._read('users');
     const user = users.find(u => u.role === role);
     if (user) {
@@ -334,13 +337,14 @@ class MockDB {
   }
 
   getCurrentRole() {
-    return localStorage.getItem(DB_PREFIX + 'currentRole') || 'farmer';
+    return localStorage.getItem(DB_PREFIX + 'currentRole') || null;
   }
 
   getCurrentUser() {
     const userJson = localStorage.getItem(DB_PREFIX + 'currentUser');
     if (!userJson) {
       const role = this.getCurrentRole();
+      if (!role) return null;
       const users = this._read('users');
       const user = users.find(u => u.role === role);
       if (user) {
@@ -350,11 +354,12 @@ class MockDB {
     }
     return userJson ? JSON.parse(userJson) : null;
   }
+
+  logout() {
+    localStorage.removeItem(DB_PREFIX + 'currentRole');
+    localStorage.removeItem(DB_PREFIX + 'currentUser');
+    window.dispatchEvent(new Event('roleChanged'));
+  }
 }
 
 export const db = new MockDB();
-
-// Initialize default user on load
-if (!localStorage.getItem(DB_PREFIX + 'currentUser')) {
-  db.setCurrentRole('farmer');
-}

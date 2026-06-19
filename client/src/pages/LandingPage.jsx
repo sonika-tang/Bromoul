@@ -115,10 +115,11 @@ const impacts = [
 const partners = ['Chip Mong', 'AEON MaxValu', 'Lucky', 'Bayon Market', 'Super Duper', 'Olympic'];
 
 const crops = [
-    { name: 'ចេក' },
-    { name: 'ស្វាយ' },
-    { name: 'ល្ពៅ' },
-    { name: 'ល្ហុង' },
+    { name: 'ត្រសក់' },
+    { name: 'ប៉េងប៉ោះ' },
+    { name: 'ខ្ញី' },
+    { name: 'ឆៃថាវ' },
+    { name: 'ល្ពៅ'},
 ];
 
 const LandingPage = () => {
@@ -150,7 +151,7 @@ const LandingPage = () => {
                     </p>
                     <div className={styles.heroActions}>
                         <Link to="/psar" className={styles.btnPrimary}>
-                            ចូលលក់ផលិតផល <Icon.Arrow />
+                            ចូលទីផ្សារ <Icon.Arrow />
                         </Link>
                         <Link to="/vipheak" className={styles.btnOutline}>
                             មើលតម្រូវការទីផ្សារ
